@@ -72,7 +72,7 @@ public class FFmpegUtil {
 
     public static void joinStream(Person person, String joinStreamKey) {
         // 本地 MP3 文件路径
-        String localMp3Path = "C:/Users/23195/Desktop/srs/bcd.mp3";
+        String localMp3Path = Constant.localMp3Path;
         // 输出流的 SRS 地址
         String srsOutputUrl = Constant.SRS_RTMP_HOST + joinStreamKey;
         System.out.println("推送地址 = " + srsOutputUrl);

@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<link rel="stylesheet" type="text/css" href="css/bootstrap.min.css"/>
+<script type="text/javascript" src="js/jquery-1.12.2.min.js"></script>
+<script type="text/javascript" src="js/srs.sdk.js"></script>
+<script type="text/javascript" src="js/adapter-7.4.0.js"></script>
+<div class="container">
+    <video id="tts" width="310" autoplay muted controls style="display: none;"></video>
+    <div class="form-inline">
+        房间号:
+        <input type="text" id="txt_room" class="input-small">
+        <button class="btn btn-primary" id="btn_join" onclick="createRoom()">加入房间</button>
+        <button class="btn btn-primary" id="btn_play" onclick="playMusic()">播放音乐</button>
+    </div>
+
+    <div class="row srs_players">
+        <div class="span4 hide" id="publisher">
+            <label></label>
+            <video id="rtc_media_publisher" width="310" autoplay muted controls></video>
+
+            <label></label>
+            <span id='self'></span>
+        </div>
+        <div class="span4 hide" id="player">
+            <label></label>
+            <video id="rtc_media_player" width="310" autoplay muted controls></video>
+
+            <label></label>
+            <span id='peer'></span>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+    const host = '192.168.43.190:11443'
+    const userId = generateUUID()
+    const webSocketUrl = 'wss://' + host + '/websocket'
+    const ws = new WebSocket(webSocketUrl)
+    const players = new Map()
+    let open = false
+    let publisher
+
+    ws.onopen = function () {
+        open = true
+    }
+
+    ws.onmessage = function (event) {
+        const r = JSON.parse(event.data)
+        console.log(r)
+        if (r.type && r.type == 'createOrEnterRoom' && r.code == '00') {
+            $('#rtc_media_publisher').show()
+            $('#publisher').show()
+            publisher = new SrsRtcPublisherAsync()
+            $('#rtc_media_publisher').prop('srcObject', publisher.stream)
+            const rtcUrl = 'webrtc://' + host + '/' + $('#txt_room').val() + "/" + userId
+            publisher.publish(rtcUrl).then(function (session) {
+                $('#self').text('Self: ' + rtcUrl)
+            }).catch(function (reason) {
+                publisher.close()
+                console.error(reason)
+            })
+        } else if (r.type && r.type == 'roomMessage' && r.code == '00') {
+            const message = JSON.parse(r.message)
+            const roomId = message.roomId
+            const personSet = message.personSet
+            for (let i = 0; i < personSet.length; i++) {
+                const otherUserId = personSet[i].userId
+                if (otherUserId != userId) {
+                    $('#player-' + otherUserId).remove()
+                    let player = new SrsRtcPlayerAsync()
+                    let ui = $('#player').clone().attr('id', 'player-' + otherUserId)
+                    let video = ui.children('#rtc_media_player')
+                    $('.srs_players').append(ui)
+                    video.show()
+                    ui.show()
+                    video.prop('srcObject', player.stream)
+                    const playUrl = 'webrtc://' + host + '/' + $('#txt_room').val() + "/" + otherUserId
+                    player.play(playUrl).then(function (session) {
+                        ui.children('#peer').text('Peer: ' + playUrl)
+                        video.prop('muted', false)
+                        players.set(otherUserId, {
+                            ui: ui,
+                            player: player
+                        })
+                    }).catch(function (reason) {
+                        player.close()
+                        video.hide()
+                        console.error(reason)
+                    })
+                }
+            }
+        } else if (r.type == 'leaveRoom' && r.code == '00') {
+            const userId = JSON.parse(r.message).userId
+            const p = players.get(userId)
+            p.player.close()
+            p.ui.hide()
+        } else if (r.type == 'tts' && r.code == '00') {
+            $('#tts').prop('srcObject', null)
+            const playUrl = 'webrtc://' + host + '/' + $('#txt_room').val() + "/" + r.message
+            let player = new SrsRtcPlayerAsync()
+            $('#tts').prop('srcObject', player.stream)
+            player.play(playUrl).then(function (session) {
+                $('#tts').prop('muted', false)
+                console.log("播放成功：" + playUrl)
+            }).catch(function (reason) {
+                player.close()
+                console.error(reason)
+            })
+        }
+    }
+
+    function send(message) {
+        if (open) {
+            ws.send(JSON.stringify(message))
+        } else {
+            alert("webSocket连接失败")
+        }
+    }
+
+    function close() {
+        ws.close()
+    }
+
+    function createRoom() {
+        send({
+            "type": "createOrEnterRoom",
+            "roomId": $('#txt_room').val(),
+            "userId": userId
+        })
+    }
+
+    function playMusic() {
+        send({
+            "type": "tts",
+            "roomId": $('#txt_room').val(),
+            "userId": userId
+        })
+    }
+
+    function generateUUID() {
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+            const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+            return v.toString(16)
+        })
+    }
+</script>
+</body>
+</html>

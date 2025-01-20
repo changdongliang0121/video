@@ -26,5 +26,7 @@ public class Constant {
 
     public static final String FFMPEG_PATH = "C:\\soft\\ffmpeg-master-latest-win64-gpl-shared\\bin\\ffmpeg.exe";
 
+    public static final String localMp3Path = "C:/Users/23195/Desktop/srs/bcd2.mp3";
+
 
 }
