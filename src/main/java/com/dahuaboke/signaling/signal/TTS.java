@@ -26,7 +26,7 @@ public class TTS implements Signal {
         }).start();
 //        WriteUtil.write(person.getChannel(), Result.success(baseInVo.getType(),key));
         String message = JSONObject.toJSONString(Result.success("tts", key));
-        Cache.pushMessage(person,message);
+        Cache.pushMessage(person,message,true);
     }
 
 }

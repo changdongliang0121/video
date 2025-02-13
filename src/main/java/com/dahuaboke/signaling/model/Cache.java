@@ -19,32 +19,23 @@ public class Cache {
     public static Map<Channel, Person> persons = new ConcurrentHashMap();
 
 
-    public static void pushRoomMessage(Person person, boolean flag) {
+    public static void pushRoomMessage(Person person,boolean flag) {
         Room room = rooms.get(person.getRoomId());
         Result pushRoomMessage = Result.success("roomMessage", JSONObject.toJSONString(room));
         String s = JSONObject.toJSONString(pushRoomMessage);
         room.getPersonSet().forEach(p -> {
-            if (p != person || flag) {
+            if(p != person || flag){
                 WriteUtil.write(p.getChannel(), s);
             }
         });
     }
 
-    public static void pushRoomMessage(Person person, String type, boolean flag) {
+    public static void pushMessage(Person person, String message,boolean flag) {
         Room room = rooms.get(person.getRoomId());
-        Result pushRoomMessage = Result.success(type, JSONObject.toJSONString(room));
-        String s = JSONObject.toJSONString(pushRoomMessage);
         room.getPersonSet().forEach(p -> {
-            if (p != person || flag) {
-                WriteUtil.write(p.getChannel(), s);
+            if(p != person || flag) {
+                WriteUtil.write(p.getChannel(), message);
             }
-        });
-    }
-
-    public static void pushMessage(Person person, String message) {
-        Room room = rooms.get(person.getRoomId());
-        room.getPersonSet().forEach(p -> {
-            WriteUtil.write(p.getChannel(), message);
         });
     }
 

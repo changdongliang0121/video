@@ -22,7 +22,7 @@ public class LeaveRoom implements Signal {
         json.put("userId", baseInVo.getPerson().getUserId());
         json.put("roomId", baseInVo.getPerson().getRoomId());
         Result result = Result.success(baseInVo.getType(), json.toString());
-        Cache.pushMessage(baseInVo.getPerson(), JSON.toJSONString(result));
+        Cache.pushMessage(baseInVo.getPerson(), JSON.toJSONString(result),true);
     }
 
 }
