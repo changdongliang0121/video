@@ -65,6 +65,7 @@ function SrsRtcPublisherAsync() {
         self.pc.addTransceiver("video", {direction: "sendonly"});
 
         var stream = await navigator.mediaDevices.getUserMedia(self.constraints);
+        //var stream = await navigator.mediaDevices.getDisplayMedia(self.constraints);
 
         // @see https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnection/addStream#Migrating_to_addTrack
         stream.getTracks().forEach(function (track) {

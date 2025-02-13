@@ -5,8 +5,11 @@ import io.netty.channel.Channel;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 public class Person {
+
+    private String uuid;
 
     private String userId;
 
@@ -24,6 +27,7 @@ public class Person {
     private Map<String, String> streamKey = new HashMap();
 
     public Person(Channel channel, String userId) {
+        this.uuid = UUID.randomUUID().toString();
         this.channel = channel;
         this.userId = userId;
     }
@@ -74,5 +78,13 @@ public class Person {
 
     public void setProcess(Process process) {
         this.process = process;
+    }
+
+    public String getUuid() {
+        return uuid;
+    }
+
+    public void setUuid(String uuid) {
+        this.uuid = uuid;
     }
 }

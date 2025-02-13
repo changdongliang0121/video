@@ -27,8 +27,8 @@ public class WebSocketHandler extends SimpleChannelInboundHandler<TextWebSocketF
     protected void channelRead0(ChannelHandlerContext channelHandlerContext, TextWebSocketFrame textWebSocketFrame) {
         Channel channel = channelHandlerContext.channel();
         String text = textWebSocketFrame.text();
-        logger.info("入参信息 : " + text);
-        BaseInVo baseInvo = null;
+        logger.info("入参信息 : {}",text);
+        BaseInVo baseInvo;
         try {
             baseInvo = JSON.parseObject(text, BaseInVo.class);
         } catch (Exception e) {
@@ -45,10 +45,6 @@ public class WebSocketHandler extends SimpleChannelInboundHandler<TextWebSocketF
                 WriteUtil.write(channel, Result.fail("error", "用户信息缺失"));
                 return;
             } else {
-                if(!Cache.checkUserId(baseInvo.getUserId())){
-                    WriteUtil.write(channel, Result.fail("error", "userId已存在"));
-                    return;
-                };
                 person = new Person(channel, baseInvo.getUserId());
                 Cache.persons.put(channel,person);
             }
@@ -61,7 +57,7 @@ public class WebSocketHandler extends SimpleChannelInboundHandler<TextWebSocketF
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
         BaseInVo baseInvo = new BaseInVo();
-        baseInvo.setType("leaveRoom");
+        baseInvo.setType(DoSignal.SignalType.LEAVE_ROOM.getValue());
         Person person = Cache.persons.get(ctx.channel());
         if (person != null) {
             baseInvo.setPerson(Cache.persons.get(ctx.channel()));

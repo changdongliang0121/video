@@ -8,7 +8,7 @@ import io.netty.channel.Channel;
 
 import java.util.Iterator;
 import java.util.Map;
-import java.util.concurrent.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class Cache {
 
@@ -19,23 +19,23 @@ public class Cache {
     public static Map<Channel, Person> persons = new ConcurrentHashMap();
 
 
-    public static void pushRoomMessage(Person person,boolean flag) {
+    public static void pushRoomMessage(Person person, boolean flag) {
         Room room = rooms.get(person.getRoomId());
         Result pushRoomMessage = Result.success("roomMessage", JSONObject.toJSONString(room));
         String s = JSONObject.toJSONString(pushRoomMessage);
         room.getPersonSet().forEach(p -> {
-            if(p != person || flag){
+            if (p != person || flag) {
                 WriteUtil.write(p.getChannel(), s);
             }
         });
     }
 
-    public static void pushRoomMessage(Person person,String type,boolean flag) {
+    public static void pushRoomMessage(Person person, String type, boolean flag) {
         Room room = rooms.get(person.getRoomId());
         Result pushRoomMessage = Result.success(type, JSONObject.toJSONString(room));
         String s = JSONObject.toJSONString(pushRoomMessage);
         room.getPersonSet().forEach(p -> {
-            if(p != person || flag){
+            if (p != person || flag) {
                 WriteUtil.write(p.getChannel(), s);
             }
         });
@@ -55,7 +55,7 @@ public class Cache {
             if (entry.getValue() == null || entry.getValue().getPersonSet().size() == 0) {
                 String roomId = entry.getValue().getRoomId();
                 iterator.remove();
-                new Thread(() ->  VideoUtils.AddWatermark(roomId)).start();
+                new Thread(() -> VideoUtils.AddWatermark(roomId)).start();
             }
         }
     }
@@ -64,10 +64,14 @@ public class Cache {
         Room room = null;
         if (Cache.rooms.containsKey(roomId)) {
             room = Cache.rooms.get(roomId);
-            room.getPersonSet().add(person);
+            synchronized (room) {
+                room.getPersonSet().add(person);
+            }
         } else {
             room = new Room(roomId);
-            room.getPersonSet().add(person);
+            synchronized (room) {
+                room.getPersonSet().add(person);
+            }
             Cache.rooms.put(roomId, room);
         }
         person.setRoomId(room.getRoomId());
@@ -86,19 +90,6 @@ public class Cache {
     public static void removePerson(Person person) {
         levelRoom(person);
         persons.remove(person);
-    }
-
-
-
-    public static boolean checkUserId(String userId) {
-        synchronized (persons) {
-            for (Person person : persons.values()) {
-                if (person.getUserId().equals(userId)) {
-                    return false;
-                }
-            }
-            return true;
-        }
     }
 
 

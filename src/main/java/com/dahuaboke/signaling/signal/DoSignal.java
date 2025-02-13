@@ -9,22 +9,49 @@ import java.util.Map;
 
 public class DoSignal {
 
-    private static Map<String, Signal> signals = new HashMap<String, Signal>();
+    private static Map<SignalType, Signal> signals = new HashMap<SignalType, Signal>();
 
-    static{
-        signals.put("createOrEnterRoom", new CreateOrEnterRoom());
-        signals.put("leaveRoom", new LeaveRoom());
-        signals.put("addOrUpdateStream", new AddOrUpdateStream());
-        signals.put("removeStream", new RemoveStream());
-        signals.put("tts", new TTS());
+    public enum SignalType {
+        CREATE_ORENTER_ROOM("createOrEnterRoom"),
+        LEAVE_ROOM("leaveRoom"),
+        ADDORUPDATE_STREAM("addOrUpdateStream"),
+        REMOVE_STREAM("removeStream"),
+        TTS("tts");
+
+        private String value;
+
+        SignalType(String value) {
+            this.value = value;
+        }
+
+        public String getValue() {
+            return value;
+        }
+    }
+
+    private static SignalType findSignalType(String signalName) {
+        for (SignalType signalType : SignalType.values()) {
+            if (signalType.value.equals(signalName)) {
+                return signalType;
+            }
+        }
+        return null;
+    }
+
+    static {
+        signals.put(SignalType.CREATE_ORENTER_ROOM, new CreateOrEnterRoom());
+        signals.put(SignalType.LEAVE_ROOM, new LeaveRoom());
+        signals.put(SignalType.ADDORUPDATE_STREAM, new AddOrUpdateStream());
+        signals.put(SignalType.REMOVE_STREAM, new RemoveStream());
+        signals.put(SignalType.TTS, new TTS());
     }
 
     public static void signal(BaseInVo baseInVo, String text) {
         try {
-            Signal signal = signals.get(baseInVo.getType());
+            Signal signal = signals.get(findSignalType(baseInVo.getType()));
             if (signal == null) {
                 WriteUtil.write(baseInVo.getPerson().getChannel(), Result.fail(baseInVo.getType(), "type不存在"));
-            }else{
+            } else {
                 signal.run(baseInVo, text);
             }
         } catch (Exception e) {
