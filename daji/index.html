@@ -35,14 +35,25 @@
         </div>
     </div>
 </div>
+<div>
+    <canvas id="signatureCanvas" width="400" height="200" style="border: 1px solid black"></canvas>
+</div>
+
 <script type="text/javascript">
-    const host = '192.168.43.190:11443'
+
+    const host = '192.168.43.184:443'
     const userId = generateUUID()
     const webSocketUrl = 'wss://' + host + '/websocket'
     const ws = new WebSocket(webSocketUrl)
     const players = new Map()
     let open = false
     let publisher
+
+    const canvas = document.getElementById('signatureCanvas');
+    const ctx = canvas.getContext('2d');
+    let isDrawing = false;
+    let lastX = 0;
+    let lastY = 0;
 
     ws.onopen = function () {
         open = true
@@ -110,6 +121,20 @@
                 player.close()
                 console.error(reason)
             })
+        } else if (r.type == "transmit"){
+            console.log(r.message)
+            if(r.childType == "draw"){
+                const fx1 = Math.floor(r.message.x1);
+                const fy1 = Math.floor(r.message.y1);
+                const fx2 = Math.floor(r.message.x2);
+                const fy2 = Math.floor(r.message.y2);
+                console.log(fx1 + "," + fy1 + "," + fx2  + "," + fy2)
+                ctx.beginPath();
+                ctx.moveTo(fx1, fy1);
+                ctx.lineTo(fx2, fy2);
+                ctx.stroke();
+            }
+
         }
     }
 
@@ -147,6 +172,88 @@
             return v.toString(16)
         })
     }
+
+    // 开始绘制
+    canvas.addEventListener('touchstart', (e) => {
+        e.preventDefault(); // 防止默认的触摸行为
+        isDrawing = true;
+        const touch = e.touches[0];
+        [lastX, lastY] = [touch.pageX - canvas.offsetLeft, touch.pageY - canvas.offsetTop];
+    });
+
+    canvas.addEventListener('touchmove', (e) => {
+        e.preventDefault(); // 防止默认的触摸行为
+        if (isDrawing) {
+            const touch = e.touches[0];
+            const currentX = touch.pageX - canvas.offsetLeft;
+            const currentY = touch.pageY - canvas.offsetTop;
+
+            ctx.beginPath();
+            ctx.moveTo(lastX, lastY);
+            ctx.lineTo(currentX, currentY);
+            ctx.stroke();
+
+
+
+            send({
+                "type": "transmit",
+                "childType":"draw",
+                "roomId": $('#txt_room').val(),
+                "userId": userId,
+                "message" : {
+                    "x1": lastX,
+                    "y1": lastY,
+                    "x2": currentX,
+                    "y2": currentY
+                }
+            });
+            lastX = currentX;
+            lastY = currentY;
+        }
+    });
+
+
+
+    // 结束绘制
+    canvas.addEventListener('touchend', () => {
+        isDrawing = false;
+    });
+
+    // 开始绘制
+    canvas.addEventListener('mousedown', (e) => {
+        isDrawing = true;
+        [lastX, lastY] = [e.offsetX, e.offsetY];
+    });
+
+    // 绘制过程
+    canvas.addEventListener('mousemove', (e) => {
+        if (isDrawing) {
+            ctx.beginPath();
+            ctx.moveTo(lastX, lastY);
+            ctx.lineTo(e.offsetX, e.offsetY);
+            ctx.stroke();
+
+            send({
+                "type": "transmit",
+                "childType":"draw",
+                "roomId": $('#txt_room').val(),
+                "userId": userId,
+                "message" : {
+                    "x1": lastX,
+                    "y1": lastY,
+                    "x2": e.offsetX,
+                    "y2": e.offsetY
+                }
+            });
+            [lastX, lastY] = [e.offsetX, e.offsetY];
+        }
+    });
+
+    // 结束绘制
+    canvas.addEventListener('mouseup', () => {
+        isDrawing = false;
+    });
+
 </script>
 </body>
 </html>

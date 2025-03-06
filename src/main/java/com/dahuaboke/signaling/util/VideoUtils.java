@@ -31,7 +31,7 @@ import java.util.Vector;
 public class VideoUtils {
 
     public static void main(String[] args) {
-        AddWatermark("123456");
+        AddWatermark("12");
     }
 
 
@@ -80,10 +80,13 @@ public class VideoUtils {
             }
             //下载文件到本地
             downloadFile(remoteFilePath, localFilePath);
-            //加水印
-            videoWaterMaker(localFilePath, waterFullPath, Constant.WATER_PNG);
-            //抽帧
-            videoFrameExtractor(waterFullPath, localFileDir, 5000);
+
+            if(localFilePath.indexOf("_") == -1){
+                //加水印
+                videoWaterMaker(localFilePath, waterFullPath, Constant.WATER_PNG);
+                //抽帧
+                videoFrameExtractor(waterFullPath, localFileDir, 5000);
+            }
         }
     }
 

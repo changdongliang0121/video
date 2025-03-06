@@ -17,7 +17,7 @@ public class DoSignal {
         ADDORUPDATE_STREAM("addOrUpdateStream"),
         REMOVE_STREAM("removeStream"),
         TTS("tts"),
-        WB_SYNC("wb-sync");
+        TRANSMIT("transmit");
 
         private String value;
 
@@ -45,7 +45,7 @@ public class DoSignal {
         signals.put(SignalType.ADDORUPDATE_STREAM, new AddOrUpdateStream());
         signals.put(SignalType.REMOVE_STREAM, new RemoveStream());
         signals.put(SignalType.TTS, new TTS());
-        signals.put(SignalType.WB_SYNC, new MessageForward());
+        signals.put(SignalType.TRANSMIT, new MessageTransmit());
     }
 
     public static void signal(BaseInVo baseInVo, String text) {
