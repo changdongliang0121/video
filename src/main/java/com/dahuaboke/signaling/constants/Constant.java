@@ -1,32 +1,59 @@
 package com.dahuaboke.signaling.constants;
 
+import java.io.IOException;
+import java.util.Properties;
+
 public class Constant {
 
     public static final String SUCCESS_CODE = "00";
 
     public static final String FAIL_CODE = "01";
 
-    public static final String FILE_ROOT_PATH = "/home/dimple/srs/srs-5.0release/trunk/objs/nginx/html/";
+    public static int SERVER_PORT;
 
-    public static final String LOCAL_ROOT_PATH = "C:/Users/23195/Desktop/srs/";
+    public static String FILE_ROOT_PATH;
 
-    public static final String WATER_PNG = LOCAL_ROOT_PATH + "hahaha.png";
+    public static String LOCAL_ROOT_PATH;
 
-    public static final String FILE_DOWNLOAD_URL = "http://192.168.43.99:8080/";
+    public static String WATER_PNG;
 
-    public static final String SRS_SERVER_HOST = "192.168.43.99";
+    public static String localMp3Path;
 
-    public static final int SRS_SERVER_SSH_PORT = 22;
+    public static String FILE_DOWNLOAD_URL;
 
-    public static final String SRS_SERVER_USERNAME = "dimple";
+    public static String SRS_SERVER_HOST;
 
-    public static final String SRS_SERVER_PASSWORD = "root";
+    public static int SRS_SERVER_SSH_PORT = 22;
 
-    public static final String SRS_RTMP_HOST = "rtmp://192.168.43.99/";
+    public static String SRS_SERVER_USERNAME;
 
-    public static final String FFMPEG_PATH = "C:/soft/ffmpeg-master-latest-win64-gpl-shared/bin/ffmpeg";
+    public static String SRS_SERVER_PASSWORD;
 
-    public static final String localMp3Path = LOCAL_ROOT_PATH + "bcd2.mp3";
+    public static String SRS_RTMP_HOST;
+
+    public static String FFMPEG_PATH;
+
+
+    static{
+        Properties properties = new Properties();
+        try {
+            properties.load(Constant.class.getClassLoader().getResourceAsStream("config.properties"));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        SERVER_PORT = Integer.parseInt(properties.getProperty("serverPort"));
+        FILE_ROOT_PATH = properties.getProperty("fileRootPath");
+        LOCAL_ROOT_PATH = properties.getProperty("localRootPath");
+        WATER_PNG = properties.getProperty("waterPng");
+        localMp3Path = properties.getProperty("localMp3Path");
+        FILE_DOWNLOAD_URL = properties.getProperty("fileDownloadUrl");
+        SRS_SERVER_HOST = properties.getProperty("srsServerHost");
+        SRS_SERVER_SSH_PORT = Integer.parseInt(properties.getProperty("srsServerSshPort"));
+        SRS_SERVER_USERNAME = properties.getProperty("srsServerUsername");
+        SRS_SERVER_PASSWORD = properties.getProperty("srsServerPassword");
+        SRS_RTMP_HOST = properties.getProperty("srsRtmpHost");
+        FFMPEG_PATH = properties.getProperty("ffmpegPath");
+    }
 
 
 }

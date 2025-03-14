@@ -1,5 +1,6 @@
 package com.dahuaboke.signaling;
 
+import com.dahuaboke.signaling.constants.Constant;
 import com.dahuaboke.signaling.handler.WebSocketHandler;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;
@@ -61,6 +62,6 @@ public class Server {
     }
 
     public static void main(String[] args) {
-        new Server(23456).start();
+        new Server(Constant.SERVER_PORT).start();
     }
 }
