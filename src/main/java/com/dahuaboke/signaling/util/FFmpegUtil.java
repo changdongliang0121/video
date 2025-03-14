@@ -2,6 +2,7 @@ package com.dahuaboke.signaling.util;
 
 import com.dahuaboke.signaling.constants.Constant;
 import com.dahuaboke.signaling.model.Person;
+import com.dahuaboke.signaling.model.Room;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -63,14 +64,7 @@ public class FFmpegUtil {
 //    }
 
 
-    //ffmpeg -re -i abc.mp3 -c:a aac -f flv rtmp://192.168.3.190/live/livestream
-
-    public static void main(String[] args) {
-        Person p = new Person(null,"xiaoming");
-        joinStream(p,"aa/a01");
-    }
-
-    public static void joinStream(Person person, String joinStreamKey) {
+    public static void joinStream(Room room, String joinStreamKey) {
         // 本地 MP3 文件路径
         String localMp3Path = Constant.localMp3Path;
         // 输出流的 SRS 地址
@@ -90,7 +84,7 @@ public class FFmpegUtil {
             // 执行 ffmpeg 命令
             ProcessBuilder processBuilder = new ProcessBuilder(command);
             Process process = processBuilder.start();
-            person.setProcess(process);
+            room.setProcess(process);
             // 读取 ffmpeg 的输出
             BufferedReader reader = new BufferedReader(new InputStreamReader(process.getErrorStream()));
             String line;

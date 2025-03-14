@@ -13,11 +13,6 @@ public class LeaveRoom implements Signal {
     public void run(BaseInVo baseInVo, String text) {
         Cache.levelRoom(baseInVo.getPerson());
         Cache.removePerson(baseInVo.getPerson());
-        if(baseInVo.getPerson().getProcess() != null){
-            try{
-                FFmpegUtil.terminateProcess(baseInVo.getPerson().getProcess());
-            }catch (Exception e){}
-        }
         JSONObject json = new JSONObject();
         json.put("userId", baseInVo.getPerson().getUserId());
         json.put("roomId", baseInVo.getPerson().getRoomId());

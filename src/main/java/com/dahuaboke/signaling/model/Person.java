@@ -19,15 +19,12 @@ public class Person {
     @JSONField(serialize = false)
     private Channel channel;
 
-    @JSONField(serialize = false)
-    private Process process;
-
     private String ttsStreamKey;
 
     private Map<String, String> streamKey = new HashMap();
 
     public Person(Channel channel, String userId) {
-        this.uuid = UUID.randomUUID().toString();
+        this.uuid = UUID.randomUUID().toString().toString().replaceAll("-", "");
         this.channel = channel;
         this.userId = userId;
     }
@@ -70,14 +67,6 @@ public class Person {
 
     public void setTtsStreamKey(String ttsStreamKey) {
         this.ttsStreamKey = ttsStreamKey;
-    }
-
-    public Process getProcess() {
-        return process;
-    }
-
-    public void setProcess(Process process) {
-        this.process = process;
     }
 
     public String getUuid() {
