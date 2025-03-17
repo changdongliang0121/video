@@ -1,8 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Title</title>
+  <meta charset="UTF-8">
+  <title>Title</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<!--  <base href="/zy/">-->
 </head>
 <body>
 <link rel="stylesheet" type="text/css" href="css/bootstrap.min.css"/>
@@ -10,250 +12,472 @@
 <script type="text/javascript" src="js/srs.sdk.js"></script>
 <script type="text/javascript" src="js/adapter-7.4.0.js"></script>
 <div class="container">
-    <video id="tts" width="310" autoplay muted controls style="display: none;"></video>
-    <div class="form-inline">
-        房间号:
-        <input type="text" id="txt_room" class="input-small">
-        <button class="btn btn-primary" id="btn_join" onclick="createRoom()">加入房间</button>
-        <button class="btn btn-primary" id="btn_play" onclick="playMusic()">播放音乐</button>
-    </div>
-
+  <div class="form-inline" id="join-room">
+    房间号:
+    <input type="text" id="txt_room" size="medium" class="input-medium" width="150">
+    <button class="btn btn-primary" id="btn_join" style="margin: 0 10px" onclick="createRoom()">加入房间</button>
+  </div>
+  <div class="video-room" id="video-room">
     <div class="row srs_players">
-        <div class="span4 hide" id="publisher">
-            <label></label>
-            <video id="rtc_media_publisher" width="310" autoplay muted controls></video>
-
-            <label></label>
-            <span id='self'></span>
+      <div class="span4 hide" id="publisher">
+        <!--        <label></label>-->
+        <video id="rtc_media_publisher"  width="100%" height="auto" style="" autoplay controls playsinline onclick="fullScreen('rtc_media_publisher')"></video>
+        <!--        <label></label>-->
+        <!--        <span id='self'></span>-->
+      </div>
+      <div class="span4 hide" id="player">
+        <!--        <label></label>-->
+        <video id="rtc_media_player" width="300" height="200" autoplay controls playsinline onclick="fullScreen('rtc_media_player')"></video>
+        <!--        <label></label>-->
+        <!--        <span id='peer'></span>-->
+      </div>
+      <div class="right-nav">
+        <div onclick="playMusic()">
+          <img class="right-nav-img" src="images/liucheng.png" alt="" />
+          <p>播放音乐</p>
         </div>
-        <div class="span4 hide" id="player">
-            <label></label>
-            <video id="rtc_media_player" width="310" autoplay muted controls></video>
-
-            <label></label>
-            <span id='peer'></span>
+        <div onclick="showSign()">
+          <img class="right-nav-img" src="images/caozuo.png" alt="" />
+          <p>签名</p>
         </div>
+        <div onclick="handleCancel()">
+          <img class="right-nav-img" src="images/guaduan.png" alt="" />
+          <p>挂断</p>
+        </div>
+      </div>
     </div>
+    <div>
+      <video id="tts" width="310" autoplay controls style="display: none;"></video>
+    </div>
+    <!--    <canvas id="signatureCanvas" width="500" height="300"></canvas>-->
+    <div id="sign-box">
+      <canvas id="signatureCanvas"></canvas>
+      <img class="sign-close" src="images/close.png" alt="" onclick="cancelSign()"/>
+    </div>
+  
+  </div>
+
 </div>
 <div>
-    <canvas id="signatureCanvas" width="400" height="200" style="border: 1px solid black"></canvas>
 </div>
 
 <script type="text/javascript">
-
-    const host = '192.168.43.184:443'
-    const userId = generateUUID()
-    const webSocketUrl = 'wss://' + host + '/websocket'
-    const ws = new WebSocket(webSocketUrl)
-    const players = new Map()
-    let open = false
-    let publisher
-
-    const canvas = document.getElementById('signatureCanvas');
-    const ctx = canvas.getContext('2d');
-    let isDrawing = false;
-    let lastX = 0;
-    let lastY = 0;
-
-    ws.onopen = function () {
-        open = true
-    }
-
-    ws.onmessage = function (event) {
-        const r = JSON.parse(event.data)
-        console.log(r)
-        if (r.type && r.type == 'createOrEnterRoom' && r.code == '00') {
-            $('#rtc_media_publisher').show()
-            $('#publisher').show()
-            publisher = new SrsRtcPublisherAsync()
-            $('#rtc_media_publisher').prop('srcObject', publisher.stream)
-            const rtcUrl = 'webrtc://' + host + '/' + $('#txt_room').val() + "/" + userId
-            publisher.publish(rtcUrl).then(function (session) {
-                $('#self').text('Self: ' + rtcUrl)
-            }).catch(function (reason) {
-                publisher.close()
-                console.error(reason)
+  const host = '1panel.haixinyan.xyz:11443'
+  const userId = generateUUID()
+  const webSocketUrl = 'wss://' + host + '/websocket'
+  const ws = new WebSocket(webSocketUrl)
+  const players = new Map()
+  let open = false
+  let publisher
+  let player
+  let video
+  let ttsPlayUrl
+  let streamId
+  let rtc_media_publisher = document.getElementById('rtc_media_publisher');
+  let rtc_media_player = document.getElementById('rtc_media_player');
+  let tts = document.getElementById('tts');
+  
+  const canvas = document.getElementById('signatureCanvas');
+  const ctx = canvas.getContext('2d');
+  let isDrawing = false;
+  let lastX = 0;
+  let lastY = 0;
+  
+  document.getElementById('video-room').style.display = 'none';
+  document.getElementById('sign-box').style.display = 'none';
+  
+  ws.onopen = function () {
+    open = true
+  }
+  
+  ws.onmessage = function (event) {
+    const r = JSON.parse(event.data)
+    console.log(r)
+    if (r.type && r.type == 'createOrEnterRoom' && r.code == '00') {
+      $('#rtc_media_publisher').show()
+      $('#publisher').show()
+      publisher = new SrsRtcPublisherAsync()
+      $('#rtc_media_publisher').prop('srcObject', publisher.stream)
+      const rtcUrl = 'webrtc://' + host + '/' + $('#txt_room').val() + "/" + userId
+      publisher.publish(rtcUrl).then(function (session) {
+        // $('#self').text('Self: ' + rtcUrl)
+      }).catch(function (reason) {
+        publisher.close()
+        console.error(reason)
+      })
+      
+      // 播放音乐
+      const message = JSON.parse(r.message)
+      console.log('message', message);
+      // $('#tts').show()
+      $('#tts').prop('srcObject', null)
+      ttsPlayUrl = 'webrtc://' + host + '/' + $('#txt_room').val() + "/" + message.ruuid
+      streamId = '/' + $('#txt_room').val() + "/" + message.ruuid
+      console.log('ttsPlayUrl', ttsPlayUrl);
+      let playertts = new SrsRtcPlayerAsync()
+      $('#tts').prop('srcObject', playertts.stream)
+      playertts.play(ttsPlayUrl).then(function (session) {
+        $('#tts').prop('muted', false)
+      }).catch(function (reason) {
+        playertts.close()
+        console.error(reason)
+      })
+      
+    } else if (r.type && r.type == 'roomMessage' && r.code == '00') {
+      const message = JSON.parse(r.message)
+      const roomId = message.roomId
+      const personSet = message.personSet
+      for (let i = 0; i < personSet.length; i++) {
+        const otherUserId = personSet[i].userId
+        if (otherUserId != userId) {
+          $('#player-' + otherUserId).remove()
+          player = new SrsRtcPlayerAsync()
+          let ui = $('#player').clone().attr('id', 'player-' + otherUserId)
+          video = ui.children('#rtc_media_player')
+          $('.srs_players').append(ui)
+          video.show()
+          ui.show()
+          video.prop('srcObject', player.stream)
+          const playUrl = 'webrtc://' + host + '/' + $('#txt_room').val() + "/" + otherUserId
+          player.play(playUrl).then(function (session) {
+            // ui.children('#peer').text('Peer: ' + playUrl)
+            video.prop('muted', false)
+            players.set(otherUserId, {
+              ui: ui,
+              player: player
             })
-        } else if (r.type && r.type == 'roomMessage' && r.code == '00') {
-            const message = JSON.parse(r.message)
-            const roomId = message.roomId
-            const personSet = message.personSet
-            for (let i = 0; i < personSet.length; i++) {
-                const otherUserId = personSet[i].userId
-                if (otherUserId != userId) {
-                    $('#player-' + otherUserId).remove()
-                    let player = new SrsRtcPlayerAsync()
-                    let ui = $('#player').clone().attr('id', 'player-' + otherUserId)
-                    let video = ui.children('#rtc_media_player')
-                    $('.srs_players').append(ui)
-                    video.show()
-                    ui.show()
-                    video.prop('srcObject', player.stream)
-                    const playUrl = 'webrtc://' + host + '/' + $('#txt_room').val() + "/" + otherUserId
-                    player.play(playUrl).then(function (session) {
-                        ui.children('#peer').text('Peer: ' + playUrl)
-                        video.prop('muted', false)
-                        players.set(otherUserId, {
-                            ui: ui,
-                            player: player
-                        })
-                    }).catch(function (reason) {
-                        player.close()
-                        video.hide()
-                        console.error(reason)
-                    })
-                }
-            }
-        } else if (r.type == 'leaveRoom' && r.code == '00') {
-            const userId = JSON.parse(r.message).userId
-            const p = players.get(userId)
-            p.player.close()
-            p.ui.hide()
-        } else if (r.type == 'tts' && r.code == '00') {
-            $('#tts').prop('srcObject', null)
-            const playUrl = 'webrtc://' + host + '/' + $('#txt_room').val() + "/" + r.message
-            let player = new SrsRtcPlayerAsync()
-            $('#tts').prop('srcObject', player.stream)
-            player.play(playUrl).then(function (session) {
-                $('#tts').prop('muted', false)
-                console.log("播放成功：" + playUrl)
-            }).catch(function (reason) {
-                player.close()
-                console.error(reason)
-            })
-        } else if (r.type == "transmit"){
-            console.log(r.message)
-            if(r.childType == "draw"){
-                const fx1 = Math.floor(r.message.x1);
-                const fy1 = Math.floor(r.message.y1);
-                const fx2 = Math.floor(r.message.x2);
-                const fy2 = Math.floor(r.message.y2);
-                console.log(fx1 + "," + fy1 + "," + fx2  + "," + fy2)
-                ctx.beginPath();
-                ctx.moveTo(fx1, fy1);
-                ctx.lineTo(fx2, fy2);
-                ctx.stroke();
-            }
-
+          }).catch(function (reason) {
+            player.close()
+            video.hide()
+            console.error(reason)
+          })
         }
+      }
+    } else if (r.type == 'leaveRoom' && r.code == '00') {
+      const userId = JSON.parse(r.message).userId
+      const p = players.get(userId)
+      p.player.close()
+      p.ui.hide()
+    } else if (r.type == 'tts' && r.code == '00') {
+      console.log("播放成功：" + ttsPlayUrl)
+      // $('#tts').show()
+      // $('#tts').prop('srcObject', null)
+      // const playUrl = 'webrtc://' + host + '/p001/p222'
+      // let player = new SrsRtcPlayerAsync()
+      // $('#tts').prop('srcObject', player.stream)
+      // player.play(playUrl).then(function (session) {
+      //   $('#tts').prop('muted', false)
+      //   console.log("播放成功：" + playUrl)
+      // }).catch(function (reason) {
+      //   player.close()
+      //   console.error(reason)
+      // })
+    } else if (r.type == "transmit"){
+      console.log(r.message)
+      if(r.childType == "draw"){
+        const fx1 = Math.floor(r.message.x1);
+        const fy1 = Math.floor(r.message.y1);
+        const fx2 = Math.floor(r.message.x2);
+        const fy2 = Math.floor(r.message.y2);
+        console.log(fx1 + "," + fy1 + "," + fx2  + "," + fy2)
+        ctx.beginPath();
+        ctx.moveTo(fx1, fy1);
+        ctx.lineTo(fx2, fy2);
+        ctx.stroke();
+      }
     }
-
-    function send(message) {
-        if (open) {
-            ws.send(JSON.stringify(message))
-        } else {
-            alert("webSocket连接失败")
+  }
+  
+  ws.onclose = function(event) {
+    console.log(`Connection closed with code ${event.code} and reason ${event.reason}`);
+  };
+  function send(message) {
+    if (open) {
+      ws.send(JSON.stringify(message))
+      document.getElementById('video-room').style.display = 'block';
+      document.getElementById('join-room').style.display = 'none';
+    } else {
+      alert("webSocket连接失败")
+    }
+  }
+  
+  function close() {
+    ws.close()
+  }
+  
+  function createRoom() {
+    send({
+      "type": "createOrEnterRoom",
+      "roomId": $('#txt_room').val(),
+      "userId": userId
+    })
+  }
+  
+  function playMusic() {
+    send({
+      "type": "tts",
+      "roomId": $('#txt_room').val(),
+      "userId": userId,
+      // "streamId": streamId
+    })
+    console.log('streamId', streamId)
+  }
+  
+  function generateUUID() {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+      const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+      return v.toString(16)
+    })
+  }
+  
+  
+  // 开始绘制
+  canvas.addEventListener('touchstart', (e) => {
+    e.preventDefault(); // 防止默认的触摸行为
+    isDrawing = true;
+    const touch = e.touches[0];
+    [lastX, lastY] = [touch.pageX - canvas.offsetLeft, touch.pageY - canvas.offsetTop];
+  });
+  
+  canvas.addEventListener('touchmove', (e) => {
+    e.preventDefault(); // 防止默认的触摸行为
+    if (isDrawing) {
+      const touch = e.touches[0];
+      const currentX = touch.pageX - canvas.offsetLeft;
+      const currentY = touch.pageY - canvas.offsetTop;
+      
+      ctx.beginPath();
+      ctx.moveTo(lastX, lastY);
+      ctx.lineTo(currentX, currentY);
+      ctx.stroke();
+      
+      
+      
+      send({
+        "type": "transmit",
+        "childType":"draw",
+        "roomId": $('#txt_room').val(),
+        "userId": userId,
+        "message" : {
+          "x1": lastX,
+          "y1": lastY,
+          "x2": currentX,
+          "y2": currentY
         }
+      });
+      lastX = currentX;
+      lastY = currentY;
     }
-
-    function close() {
-        ws.close()
-    }
-
-    function createRoom() {
-        send({
-            "type": "createOrEnterRoom",
-            "roomId": $('#txt_room').val(),
-            "userId": userId
-        })
-    }
-
-    function playMusic() {
-        send({
-            "type": "tts",
-            "roomId": $('#txt_room').val(),
-            "userId": userId
-        })
-    }
-
-    function generateUUID() {
-        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
-            const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
-            return v.toString(16)
-        })
-    }
-
-    // 开始绘制
-    canvas.addEventListener('touchstart', (e) => {
-        e.preventDefault(); // 防止默认的触摸行为
-        isDrawing = true;
-        const touch = e.touches[0];
-        [lastX, lastY] = [touch.pageX - canvas.offsetLeft, touch.pageY - canvas.offsetTop];
-    });
-
-    canvas.addEventListener('touchmove', (e) => {
-        e.preventDefault(); // 防止默认的触摸行为
-        if (isDrawing) {
-            const touch = e.touches[0];
-            const currentX = touch.pageX - canvas.offsetLeft;
-            const currentY = touch.pageY - canvas.offsetTop;
-
-            ctx.beginPath();
-            ctx.moveTo(lastX, lastY);
-            ctx.lineTo(currentX, currentY);
-            ctx.stroke();
-
-
-
-            send({
-                "type": "transmit",
-                "childType":"draw",
-                "roomId": $('#txt_room').val(),
-                "userId": userId,
-                "message" : {
-                    "x1": lastX,
-                    "y1": lastY,
-                    "x2": currentX,
-                    "y2": currentY
-                }
-            });
-            lastX = currentX;
-            lastY = currentY;
+  });
+  
+  
+  
+  // 结束绘制
+  canvas.addEventListener('touchend', () => {
+    isDrawing = false;
+  });
+  
+  // 开始绘制
+  canvas.addEventListener('mousedown', (e) => {
+    isDrawing = true;
+    [lastX, lastY] = [e.offsetX, e.offsetY];
+  });
+  
+  // 绘制过程
+  canvas.addEventListener('mousemove', (e) => {
+    if (isDrawing) {
+      ctx.beginPath();
+      ctx.moveTo(lastX, lastY);
+      ctx.lineTo(e.offsetX, e.offsetY);
+      ctx.stroke();
+      
+      send({
+        "type": "transmit",
+        "childType":"draw",
+        "roomId": $('#txt_room').val(),
+        "userId": userId,
+        "message" : {
+          "x1": lastX,
+          "y1": lastY,
+          "x2": e.offsetX,
+          "y2": e.offsetY
         }
-    });
-
-
-
-    // 结束绘制
-    canvas.addEventListener('touchend', () => {
-        isDrawing = false;
-    });
-
-    // 开始绘制
-    canvas.addEventListener('mousedown', (e) => {
-        isDrawing = true;
-        [lastX, lastY] = [e.offsetX, e.offsetY];
-    });
-
-    // 绘制过程
-    canvas.addEventListener('mousemove', (e) => {
-        if (isDrawing) {
-            ctx.beginPath();
-            ctx.moveTo(lastX, lastY);
-            ctx.lineTo(e.offsetX, e.offsetY);
-            ctx.stroke();
-
-            send({
-                "type": "transmit",
-                "childType":"draw",
-                "roomId": $('#txt_room').val(),
-                "userId": userId,
-                "message" : {
-                    "x1": lastX,
-                    "y1": lastY,
-                    "x2": e.offsetX,
-                    "y2": e.offsetY
-                }
-            });
-            [lastX, lastY] = [e.offsetX, e.offsetY];
-        }
-    });
-
-    // 结束绘制
-    canvas.addEventListener('mouseup', () => {
-        isDrawing = false;
-    });
-
+      });
+      [lastX, lastY] = [e.offsetX, e.offsetY];
+    }
+  });
+  
+  // 结束绘制
+  canvas.addEventListener('mouseup', () => {
+    isDrawing = false;
+  });
+  
+  // 挂断
+  function handleCancel() {
+    // publisher.close()
+    // if(player) {
+    //   player.close();
+    // }
+    document.getElementById('video-room').style.display = 'none';
+    document.getElementById('join-room').style.display = 'block';
+    console.log('rtc_media_publisher',rtc_media_publisher.srcObject)
+    console.log('rtc_media_player',rtc_media_player.srcObject)
+    console.log('tts',tts.srcObject)
+    console.log('rtc_media_player', rtc_media_player, player)
+    
+    publisher.close()
+    rtc_media_publisher.srcObject?.getTracks().forEach(track => track.stop());
+    rtc_media_publisher.srcObject = null;
+    tts.srcObject?.getTracks().forEach(track => track.stop());
+    tts.srcObject = null;
+    
+    if(player) {
+      player.close();
+      rtc_media_publisher.srcObject?.getTracks().forEach(track => track.stop());
+      rtc_media_publisher.srcObject = null;
+    }
+    cancelSign()
+  }
+  
+  function showSign() {
+    console.log('签名')
+    document.getElementById('sign-box').style.display = 'block';
+  }
+  
+  function cancelSign () {
+    document.getElementById('sign-box').style.display = 'none';
+  }
+  
+  // 全屏
+  function fullScreen(id) {
+    console.log('id',id)
+    // if (id === 'rtc_media_publisher') {
+    //   document.getElementById('rtc_media_publisher').style.width = '100%';
+    //   document.getElementById('rtc_media_publisher').style.height = '100vh';
+    //   document.getElementById('rtc_media_publisher').style.position = 'relative';
+    //   document.getElementById('rtc_media_publisher').style.zIndex = '1';
+    //   document.getElementById('rtc_media_player').style.width = '310px';
+    //   document.getElementById('rtc_media_player').style.height = '200px';
+    //   document.getElementById('rtc_media_player').style.position = 'absolute';
+    //   document.getElementById('rtc_media_player').style.top = '0';
+    //   document.getElementById('rtc_media_player').style.zIndex = '999';
+    // } else if (id === 'rtc_media_player') {
+    //   document.getElementById('rtc_media_player').style.width = '100%';
+    //   document.getElementById('rtc_media_player').style.height = '100vh';
+    //   document.getElementById('rtc_media_player').style.position = 'relative';
+    //   document.getElementById('rtc_media_player').style.zIndex = '1';
+    //   document.getElementById('rtc_media_publisher').style.width = '310px';
+    //   document.getElementById('rtc_media_publisher').style.height = '200px';
+    //   document.getElementById('rtc_media_publisher').style.position = 'absolute';
+    //   document.getElementById('rtc_media_publisher').style.top = '0';
+    //   document.getElementById('rtc_media_publisher').style.zIndex = '999';
+    // }
+    // document.getElementById('id').style.display = 'none';
+  }
 </script>
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  .container {
+    margin: 0;
+    width: 100%;
+    /*height: 100vh;*/
+    /*background: #000000;*/
+    /*padding: 20px 0 20px 20px;*/
+  }
+  .video-room {
+    width: 100vw;
+    position: relative;
+    /*background: #000000;*/
+    /*display: grid;*/
+    /*grid-template-columns: 1fr 80px;*/
+  }
+  video {
+    object-fit: cover;
+    transform: rotateY(180deg);
+    -webkit-transform: rotateY(180deg);
+    -moz-transform: rotateY(180deg);
+  }
+  .right-nav {
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    /*height: 350px;*/
+    /*width: 120px;*/
+    /*color: #4e4e4e;*/
+    /*color: #727272;*/
+    color: #ffffff;
+    font-size: 18px;
+    text-align: center;
+    padding: 0 10px;
+    display: grid;
+    /*垂直三等份*/
+    grid-template-rows: repeat(3, 1fr);
+    /*垂直居中*/
+    place-items: center;
+    grid-gap: 50px;
+  }
+  .right-nav-img {
+    /*width: 40px;*/
+    /*margin-bottom: 5px;*/
+    width: 40px;
+    margin-bottom: 8px;
+  }
+  #join-room {
+    margin: 30px;
+  }
+  .srs_players {
+    position: relative;
+  }
+  #rtc_media_publisher {
+    width: 100vw;
+    height: 100vh;
+  }
+  #rtc_media_player {
+    position: absolute;
+    top: 0;
+    left: 0;
+  }
+  #player {
+    position: absolute;
+    top: 0;
+    left: 0;
+  }
+  #signatureCanvas {
+    width: 350px;
+    height: 200px;
+    background: #ffffff;
+    border-radius: 16px;
+    position: absolute;
+    /*left: 0;*/
+    /*bottom: 0;*/
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+  #sign-box {
+    /*position: relative;*/
+    /*position: absolute;*/
+    /*!*left: 0;*!*/
+    /*!*bottom: 0;*!*/
+    /*top: 50%;*/
+    /*left: 50%;*/
+    /*transform: translate(-50%, -50%);*/
+  }
+  .sign-close {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(150px, -95px);
+    width: 20px;
+    height: 20px;
+  }
+
+</style>
+</body>
 </body>
 </html>
