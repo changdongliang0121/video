@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <title>Title</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no">
-<!--  <base href="/zy/">-->
 </head>
 <body>
 <link rel="stylesheet" type="text/css" href="css/bootstrap.min.css"/>
@@ -20,21 +19,19 @@
   <div class="video-room" id="video-room">
     <div class="row srs_players">
       <div class="span4 hide" id="publisher">
-        <!--        <label></label>-->
-        <video id="rtc_media_publisher"  width="100%" height="auto" style="" autoplay controls playsinline onclick="fullScreen('rtc_media_publisher')"></video>
-        <!--        <label></label>-->
-        <!--        <span id='self'></span>-->
+        <video id="rtc_media_publisher" autoplay controls playsinline controlsList="nodownload nofullscreen" onclick="fullScreen('rtc_media_publisher')"></video>
       </div>
       <div class="span4 hide" id="player">
-        <!--        <label></label>-->
-        <video id="rtc_media_player" width="300" height="200" autoplay controls playsinline onclick="fullScreen('rtc_media_player')"></video>
-        <!--        <label></label>-->
-        <!--        <span id='peer'></span>-->
+        <video id="rtc_media_player" autoplay controls playsinline controlsList="nodownload nofullscreen" onclick="fullScreen('rtc_media_player')"></video>
       </div>
       <div class="right-nav">
         <div onclick="playMusic()">
           <img class="right-nav-img" src="images/liucheng.png" alt="" />
           <p>播放音乐</p>
+        </div>
+        <div onclick="switchCamera()">
+          <img class="right-nav-img" src="images/switchcamera.png" alt="" />
+          <p>切换摄像头</p>
         </div>
         <div onclick="showSign()">
           <img class="right-nav-img" src="images/caozuo.png" alt="" />
@@ -73,6 +70,7 @@
   let video
   let ttsPlayUrl
   let streamId
+  let facingMode = 'user'
   let rtc_media_publisher = document.getElementById('rtc_media_publisher');
   let rtc_media_player = document.getElementById('rtc_media_player');
   let tts = document.getElementById('tts');
@@ -105,7 +103,7 @@
         publisher.close()
         console.error(reason)
       })
-      
+      getCameraStream();
       // 播放音乐
       const message = JSON.parse(r.message)
       console.log('message', message);
@@ -222,7 +220,7 @@
     })
     console.log('streamId', streamId)
   }
-  
+
   function generateUUID() {
     return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
       const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
@@ -339,15 +337,64 @@
     cancelSign()
   }
   
+  // 签名
   function showSign() {
     console.log('签名')
     document.getElementById('sign-box').style.display = 'block';
   }
-  
+
+  // 关闭签名
   function cancelSign () {
     document.getElementById('sign-box').style.display = 'none';
   }
-  
+
+  // 切换摄像头
+  function switchCamera() {
+    if (!isMobile()) return;
+    // 切换facingMode值，前置变后置，后置变前置
+    facingMode = facingMode === 'user' ? 'environment' : 'user';
+    if (facingMode === 'user') {
+      // 前置摄像头镜像
+      rtc_media_publisher.style.transform = 'rotateY(180deg)'/**/
+    } else if (facingMode === 'environment') {
+      rtc_media_publisher.style.transform = 'rotateY(0)'
+    }
+    // 停止当前流并重新获取流
+    const tracks = rtc_media_publisher.srcObject.getTracks();
+    tracks.forEach(track => track.stop());
+    // 重新获取流并设置新的facingMode
+    getCameraStream();
+  }
+
+  function getCameraStream() {
+    const constraints = {
+      video: {
+        width: { ideal: 1280 },
+        height: { ideal: 720 },
+        frameRate: { ideal: 30 }, // 视频流的帧率
+        facingMode: facingMode, // 前置/后置摄像头
+      },
+      audio: false
+    };
+    navigator.mediaDevices.getUserMedia(constraints).then(stream => {
+      rtc_media_publisher.srcObject = stream;
+    }).catch(error => {
+      console.error("获取媒体设备失败:", error);
+    });
+  }
+
+  // 判断是否为移动设备
+  function isMobile() {
+    return (
+      typeof window.orientation !== "undefined" || // 判断是否存在window.orientation属性，此属性在移动设备上一般存在
+      navigator.userAgent.indexOf('IEMobile') !== -1 || // 判断是否为Windows Phone
+      navigator.userAgent.indexOf('iPhone') !== -1 || // 判断是否为iPhone
+      navigator.userAgent.indexOf('Android') !== -1 && navigator.userAgent.indexOf('Mobile') !== -1 || // 判断是否为Android手机
+      navigator.userAgent.indexOf('BlackBerry') !== -1 || // 判断是否为BlackBerry
+      navigator.userAgent.indexOf('Opera Mini') !== -1 // 判断是否为Opera Mini浏览器
+    );
+  }
+
   // 全屏
   function fullScreen(id) {
     console.log('id',id)
@@ -397,9 +444,6 @@
   }
   video {
     object-fit: cover;
-    transform: rotateY(180deg);
-    -webkit-transform: rotateY(180deg);
-    -moz-transform: rotateY(180deg);
   }
   .right-nav {
     position: absolute;
@@ -424,7 +468,7 @@
   .right-nav-img {
     /*width: 40px;*/
     /*margin-bottom: 5px;*/
-    width: 40px;
+    width: 32px;
     margin-bottom: 8px;
   }
   #join-room {
@@ -436,8 +480,11 @@
   #rtc_media_publisher {
     width: 100vw;
     height: 100vh;
+    transform: rotateY(180deg);
   }
   #rtc_media_player {
+    width: 300px;
+    height: 200px;
     position: absolute;
     top: 0;
     left: 0;
@@ -477,6 +524,17 @@
     height: 20px;
   }
 
+  video::-webkit-media-controls {
+    display:none;
+  }
+
+  video::-moz-media-controls {
+    display:none;
+  }
+
+  video::-ms-media-controls {
+    display:none;
+  }
 </style>
 </body>
 </body>
