@@ -26,7 +26,7 @@
       </div>
     </div>
     <div class="right-nav">
-      <div onclick="playMusic()">
+      <div id="playButton">
         <img class="right-nav-img" src="images/liucheng.png" alt="" />
         <p>播放音乐</p>
       </div>
@@ -38,12 +38,21 @@
         <img class="right-nav-img" src="images/caozuo.png" alt="" />
         <p>签名</p>
       </div>
+      <div onclick="captureScreenshot()">
+        <img class="right-nav-img" src="images/liucheng.png" alt="" />
+        <p>截图</p>
+      </div>
+      <!-- 新增面签信息按钮 -->
+      <div onclick="showFaceSignModal()">
+        <img class="right-nav-img" src="images/caozuo.png" alt="" />
+        <p>面签信息</p>
+      </div>
       <div onclick="handleCancel()">
         <img class="right-nav-img" src="images/guaduan.png" alt="" />
         <p>挂断</p>
       </div>
     </div>
-    <video id="tts" width="310" autoplay controls style="display: none;"></video>
+    <audio id="tts" width="310" autoplay controls style="display: none;"></audio>
     <!--    <canvas id="signatureCanvas" width="500" height="300"></canvas>-->
     <div id="sign-box">
       <canvas id="signatureCanvas"></canvas>
@@ -52,6 +61,72 @@
   
   </div>
 
+<!-- 面签信息弹框 -->
+<div id="faceSignModal" style="display: none; position: fixed; bottom: 0; left: 0; width: 100%; background: white; padding: 20px; box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1); z-index: 1000;">
+  <h3>面签信息</h3>
+  <div style="margin-bottom: 20px;">
+    <!-- 订单编号 -->
+    <div style="display: flex; justify-content: space-between;">
+      <p><strong>订单编号：</strong></p>
+      <p>123456789</p>
+    </div>
+    <!-- 主借人姓名 -->
+    <div style="display: flex; justify-content: space-between;">
+      <p><strong>主借人姓名：</strong></p>
+      <p>张三</p>
+    </div>
+    <!-- 身份证号码 -->
+    <div style="display: flex; justify-content: space-between;">
+      <p><strong>身份证号码：</strong></p>
+      <p>123456789012345678</p>
+    </div>
+    <!-- 客户意向信息 -->
+    <div style="display: flex; justify-content: space-between;">
+      <p><strong>客户意向信息：</strong></p>
+      <p>贷款金额 100,000 元</p>
+    </div>
+    <!-- 意向车型 -->
+    <div style="display: flex; justify-content: space-between;">
+      <p><strong>意向车型：</strong></p>
+      <p>宝马 X5</p>
+    </div>
+  </div>
+  <div>
+    <h4>影像资料</h4>
+    <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+      <!-- 身份证正面 -->
+      <div class="image-container">
+        <img src="" alt="身份证正面" class="zoomable-image" />
+        <p>身份证正面</p>
+      </div>
+      <!-- 身份证反面 -->
+      <div class="image-container">
+        <img src="" alt="身份证反面" class="zoomable-image" />
+        <p>身份证反面</p>
+      </div>
+    </div>
+  </div>
+  <div>
+    <h4>截图图片</h4>
+    <div id="screenshotList" style="display: flex; flex-wrap: wrap; gap: 10px;">
+      <!-- 截图图片动态插入 -->
+    </div>
+  </div>
+  <button onclick="closeFaceSignModal()" style="margin-top: 20px;">关闭</button>
+</div>
+
+<!-- 图片放大弹框 -->
+<div id="imageZoomModal" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.5); z-index: 1001;">
+  <img id="zoomedImage" src="" alt="放大图片" style="max-width: 90vw; max-height: 90vh;" />
+  <button onclick="closeImageZoomModal()" style="margin-top: 10px;">关闭</button>
+</div>
+
+<!-- 删除确认弹框 -->
+<div id="deleteConfirmModal" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.5); z-index: 1002;">
+  <p>确定要删除该截图吗？</p>
+  <button onclick="confirmDelete()">确定</button>
+  <button onclick="cancelDelete()">取消</button>
+</div>
 </div>
 <div>
 </div>
@@ -213,8 +288,20 @@
       "userId": userId,
       // "streamId": streamId
     })
+    const tts = document.getElementById('tts');
+    tts.muted = false;
+    tts.play().catch(error => {
+      console.error('播放失败:', error);
+      if (/Android/.test(navigator.userAgent)) {
+        // 安卓可能需要强制恢复静音状态
+        tts.muted = false;
+        tts.play();
+      }
+    });
     console.log('streamId', streamId)
   }
+  // ios不能自动播放，需手动触发
+  document.getElementById('playButton').addEventListener('click', playMusic);
 
   function generateUUID() {
     return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
@@ -330,6 +417,8 @@
       rtc_media_player.srcObject = null;
     }
     cancelSign()
+    //关闭面签信息弹框
+    closeFaceSignModal()
   }
   
   // 签名
@@ -416,6 +505,151 @@
       document.getElementById('publisher').style.zIndex = '999';
     }
   }
+  // 用于保存截图的变量
+let screenshotDataUrl = null;
+
+// 截图功能
+function captureScreenshot() {
+  if (screenshots.length >= 3) {
+        alert('已达截图图片保存上限（3），无法进行截图！');
+        return;
+      }
+  // 获取视频元素（截取本地视频）
+  const video = document.getElementById('rtc_media_publisher');
+
+  // 创建canvas画布
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+
+  // 设置canvas尺寸与视频一致
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+
+  try {
+    // 将视频画面绘制到canvas
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+    // 将canvas转换为图片并保存
+    screenshotDataUrl = canvas.toDataURL('image/png');
+    console.log('截图成功！');
+    alert('截图已保存！');
+  } catch (error) {
+    console.error('截图失败:', error);
+    alert('截图失败，请确保视频已播放！');
+  }
+}
+
+// 打开面签信息弹框
+function showFaceSignModal() {
+  // 显示弹框
+  document.getElementById('faceSignModal').style.display = 'block';
+}
+// 关闭面签信息弹框
+function closeFaceSignModal() {
+  document.getElementById('faceSignModal').style.display = 'none';
+}
+// 用于保存截图的数组（最多 3 张）
+let screenshots = [];
+
+// 当前选中的截图索引（用于删除）
+let selectedScreenshotIndex = null;
+
+// 截图功能
+function captureScreenshot() {
+  if (screenshots.length >= 3) {
+    alert('已达截图图片保存上限（3），无法进行截图！');
+    return;
+  }
+
+  // 获取视频元素（截取本地视频）
+  const video = document.getElementById('rtc_media_publisher');
+
+  // 创建canvas画布
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+
+  // 设置canvas尺寸与视频一致
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+
+  try {
+    // 将视频画面绘制到canvas
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+    // 将canvas转换为图片并保存
+    const screenshotDataUrl = canvas.toDataURL('image/png');
+    screenshots.push(screenshotDataUrl); // 保存截图
+    updateScreenshotList(); // 更新截图列表
+    alert('截图成功！');
+  } catch (error) {
+    console.error('截图失败:', error);
+    alert('截图失败，请确保视频已播放！');
+  }
+}
+
+// 更新截图列表
+function updateScreenshotList() {
+  const screenshotList = document.getElementById('screenshotList');
+  screenshotList.innerHTML = ''; // 清空列表
+
+  screenshots.forEach((screenshot, index) => {
+    const screenshotItem = document.createElement('div');
+    screenshotItem.className = 'image-container';
+    screenshotItem.innerHTML = `
+      <img src="${screenshot}" alt="截图" class="zoomable-image" />
+      <span class="delete-icon" onclick="openDeleteConfirmModal(${index})">×</span>
+    `;
+    screenshotList.appendChild(screenshotItem);
+  });
+}
+
+// 打开删除确认弹框
+function openDeleteConfirmModal(index) {
+  selectedScreenshotIndex = index;
+  document.getElementById('deleteConfirmModal').style.display = 'block';
+}
+
+// 确认删除
+function confirmDelete() {
+  if (selectedScreenshotIndex !== null) {
+    screenshots.splice(selectedScreenshotIndex, 1); // 删除截图
+    updateScreenshotList(); // 更新截图列表
+    selectedScreenshotIndex = null;
+  }
+  closeDeleteConfirmModal();
+}
+
+// 取消删除
+function cancelDelete() {
+  selectedScreenshotIndex = null;
+  closeDeleteConfirmModal();
+}
+
+// 关闭删除确认弹框
+function closeDeleteConfirmModal() {
+  document.getElementById('deleteConfirmModal').style.display = 'none';
+}
+
+// 打开图片放大弹框
+function openImageZoomModal(src) {
+  const zoomedImage = document.getElementById('zoomedImage');
+  zoomedImage.src = src;
+  document.getElementById('imageZoomModal').style.display = 'block';
+}
+
+// 关闭图片放大弹框
+function closeImageZoomModal() {
+  document.getElementById('imageZoomModal').style.display = 'none';
+}
+
+// 绑定图片点击事件（放大功能）
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.zoomable-image').forEach(image => {
+    image.addEventListener('click', () => {
+      openImageZoomModal(image.src);
+    });
+  });
+});
 </script>
 <style>
   * {
@@ -503,6 +737,59 @@
     height: 20px;
     z-index: 9999;
   }
+  /* 面签信息弹框样式 */
+#faceSignModal {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background: white;
+  padding: 20px;
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+  z-index: 10000;
+}
+
+/* 图片容器样式 */
+.image-container {
+  position: relative;
+  text-align: center;
+}
+
+.image-container img {
+  max-width: 100px;
+  max-height: 100px;
+  cursor: pointer;
+}
+
+/* 删除图标样式 */
+.delete-icon {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background: red;
+  color: white;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  line-height: 20px;
+  text-align: center;
+  cursor: pointer;
+}
+
+/* 弹框按钮样式 */
+button {
+  padding: 10px 20px;
+  background: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #0056b3;
+}
 </style>
 </body>
 </body>
