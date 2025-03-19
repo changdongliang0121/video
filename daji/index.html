@@ -19,33 +19,31 @@
   <div class="video-room" id="video-room">
     <div class="srs_players">
       <div class="publisher" id="publisher" onclick="fullScreen('publisher')">
-        <video id="rtc_media_publisher" autoplay controls playsinline controlsList="nodownload nofullscreen"></video>
+        <video id="rtc_media_publisher" autoplay playsinline></video>
       </div>
       <div class="player hide" id="player"onclick="fullScreen('player')">
-        <video id="rtc_media_player" autoplay controls playsinline controlsList="nodownload nofullscreen"></video>
+        <video id="rtc_media_player" autoplay playsinline></video>
       </div>
     </div>
-    <div>
-      <div class="right-nav">
-        <div onclick="playMusic()">
-          <img class="right-nav-img" src="images/liucheng.png" alt="" />
-          <p>播放音乐</p>
-        </div>
-        <div onclick="switchCamera()">
-          <img class="right-nav-img" src="images/switchcamera.png" alt="" />
-          <p>切换摄像头</p>
-        </div>
-        <div onclick="showSign()">
-          <img class="right-nav-img" src="images/caozuo.png" alt="" />
-          <p>签名</p>
-        </div>
-        <div onclick="handleCancel()">
-          <img class="right-nav-img" src="images/guaduan.png" alt="" />
-          <p>挂断</p>
-        </div>
+    <div class="right-nav">
+      <div onclick="playMusic()">
+        <img class="right-nav-img" src="images/liucheng.png" alt="" />
+        <p>播放音乐</p>
       </div>
-      <video id="tts" width="310" autoplay controls style="display: none;"></video>
+      <div onclick="switchCamera()">
+        <img class="right-nav-img" src="images/switchcamera.png" alt="" />
+        <p>切换摄像头</p>
+      </div>
+      <div onclick="showSign()">
+        <img class="right-nav-img" src="images/caozuo.png" alt="" />
+        <p>签名</p>
+      </div>
+      <div onclick="handleCancel()">
+        <img class="right-nav-img" src="images/guaduan.png" alt="" />
+        <p>挂断</p>
+      </div>
     </div>
+    <video id="tts" width="310" autoplay controls style="display: none;"></video>
     <!--    <canvas id="signatureCanvas" width="500" height="300"></canvas>-->
     <div id="sign-box">
       <canvas id="signatureCanvas"></canvas>
@@ -384,11 +382,12 @@
   function isMobile() {
     return (
       typeof window.orientation !== "undefined" || // 判断是否存在window.orientation属性，此属性在移动设备上一般存在
-      navigator.userAgent.indexOf('IEMobile') !== -1 || // 判断是否为Windows Phone
-      navigator.userAgent.indexOf('iPhone') !== -1 || // 判断是否为iPhone
-      navigator.userAgent.indexOf('Android') !== -1 && navigator.userAgent.indexOf('Mobile') !== -1 || // 判断是否为Android手机
-      navigator.userAgent.indexOf('BlackBerry') !== -1 || // 判断是否为BlackBerry
-      navigator.userAgent.indexOf('Opera Mini') !== -1 // 判断是否为Opera Mini浏览器
+      navigator.userAgent.indexOf('IEMobile') !== -1 ||
+      navigator.userAgent.indexOf('iPhone') !== -1 ||
+      navigator.userAgent.indexOf('Android') !== -1 && navigator.userAgent.indexOf('Mobile') !== -1 ||
+      navigator.userAgent.indexOf('BlackBerry') !== -1 ||
+      navigator.userAgent.indexOf('Iqoo') !== -1 ||
+      navigator.userAgent.indexOf('Opera Mini') !== -1
     );
   }
   
@@ -522,18 +521,6 @@
     transform: translate(150px, -95px);
     width: 20px;
     height: 20px;
-  }
-
-  video::-webkit-media-controls {
-    display:none;
-  }
-  
-  video::-moz-media-controls {
-    display:none;
-  }
-  
-  video::-ms-media-controls {
-    display:none;
   }
 </style>
 </body>
