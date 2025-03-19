@@ -17,13 +17,15 @@
     <button class="btn btn-primary" id="btn_join" style="margin: 0 10px" onclick="createRoom()">加入房间</button>
   </div>
   <div class="video-room" id="video-room">
-    <div class="row srs_players">
-      <div class="span4 hide" id="publisher">
-        <video id="rtc_media_publisher" autoplay controls playsinline controlsList="nodownload nofullscreen" onclick="fullScreen('rtc_media_publisher')"></video>
+    <div class="srs_players">
+      <div class="publisher" id="publisher" onclick="fullScreen('publisher')">
+        <video id="rtc_media_publisher" autoplay controls playsinline controlsList="nodownload nofullscreen"></video>
       </div>
-      <div class="span4 hide" id="player">
-        <video id="rtc_media_player" autoplay controls playsinline controlsList="nodownload nofullscreen" onclick="fullScreen('rtc_media_player')"></video>
+      <div class="player hide" id="player"onclick="fullScreen('player')">
+        <video id="rtc_media_player" autoplay controls playsinline controlsList="nodownload nofullscreen"></video>
       </div>
+    </div>
+    <div>
       <div class="right-nav">
         <div onclick="playMusic()">
           <img class="right-nav-img" src="images/liucheng.png" alt="" />
@@ -42,8 +44,6 @@
           <p>挂断</p>
         </div>
       </div>
-    </div>
-    <div>
       <video id="tts" width="310" autoplay controls style="display: none;"></video>
     </div>
     <!--    <canvas id="signatureCanvas" width="500" height="300"></canvas>-->
@@ -103,6 +103,7 @@
         publisher.close()
         console.error(reason)
       })
+      
       getCameraStream();
       // 播放音乐
       const message = JSON.parse(r.message)
@@ -130,18 +131,14 @@
         if (otherUserId != userId) {
           $('#player-' + otherUserId).remove()
           player = new SrsRtcPlayerAsync()
-          let ui = $('#player').clone().attr('id', 'player-' + otherUserId)
-          video = ui.children('#rtc_media_player')
-          $('.srs_players').append(ui)
+          $('#player').show();
+          video = $('#rtc_media_player')
           video.show()
-          ui.show()
           video.prop('srcObject', player.stream)
           const playUrl = 'webrtc://' + host + '/' + $('#txt_room').val() + "/" + otherUserId
           player.play(playUrl).then(function (session) {
-            // ui.children('#peer').text('Peer: ' + playUrl)
             video.prop('muted', false)
             players.set(otherUserId, {
-              ui: ui,
               player: player
             })
           }).catch(function (reason) {
@@ -331,8 +328,8 @@
     
     if(player) {
       player.close();
-      rtc_media_publisher.srcObject?.getTracks().forEach(track => track.stop());
-      rtc_media_publisher.srcObject = null;
+      rtc_media_player.srcObject?.getTracks().forEach(track => track.stop());
+      rtc_media_player.srcObject = null;
     }
     cancelSign()
   }
@@ -342,12 +339,12 @@
     console.log('签名')
     document.getElementById('sign-box').style.display = 'block';
   }
-
+  
   // 关闭签名
   function cancelSign () {
     document.getElementById('sign-box').style.display = 'none';
   }
-
+  
   // 切换摄像头
   function switchCamera() {
     if (!isMobile()) return;
@@ -355,7 +352,7 @@
     facingMode = facingMode === 'user' ? 'environment' : 'user';
     if (facingMode === 'user') {
       // 前置摄像头镜像
-      rtc_media_publisher.style.transform = 'rotateY(180deg)'/**/
+      rtc_media_publisher.style.transform = 'rotateY(180deg)'
     } else if (facingMode === 'environment') {
       rtc_media_publisher.style.transform = 'rotateY(0)'
     }
@@ -365,7 +362,7 @@
     // 重新获取流并设置新的facingMode
     getCameraStream();
   }
-
+  
   function getCameraStream() {
     const constraints = {
       video: {
@@ -382,7 +379,7 @@
       console.error("获取媒体设备失败:", error);
     });
   }
-
+  
   // 判断是否为移动设备
   function isMobile() {
     return (
@@ -394,32 +391,31 @@
       navigator.userAgent.indexOf('Opera Mini') !== -1 // 判断是否为Opera Mini浏览器
     );
   }
-
+  
   // 全屏
   function fullScreen(id) {
-    console.log('id',id)
-    // if (id === 'rtc_media_publisher') {
-    //   document.getElementById('rtc_media_publisher').style.width = '100%';
-    //   document.getElementById('rtc_media_publisher').style.height = '100vh';
-    //   document.getElementById('rtc_media_publisher').style.position = 'relative';
-    //   document.getElementById('rtc_media_publisher').style.zIndex = '1';
-    //   document.getElementById('rtc_media_player').style.width = '310px';
-    //   document.getElementById('rtc_media_player').style.height = '200px';
-    //   document.getElementById('rtc_media_player').style.position = 'absolute';
-    //   document.getElementById('rtc_media_player').style.top = '0';
-    //   document.getElementById('rtc_media_player').style.zIndex = '999';
-    // } else if (id === 'rtc_media_player') {
-    //   document.getElementById('rtc_media_player').style.width = '100%';
-    //   document.getElementById('rtc_media_player').style.height = '100vh';
-    //   document.getElementById('rtc_media_player').style.position = 'relative';
-    //   document.getElementById('rtc_media_player').style.zIndex = '1';
-    //   document.getElementById('rtc_media_publisher').style.width = '310px';
-    //   document.getElementById('rtc_media_publisher').style.height = '200px';
-    //   document.getElementById('rtc_media_publisher').style.position = 'absolute';
-    //   document.getElementById('rtc_media_publisher').style.top = '0';
-    //   document.getElementById('rtc_media_publisher').style.zIndex = '999';
-    // }
-    // document.getElementById('id').style.display = 'none';
+    console.log('id',id,document.getElementById('rtc_media_player').style)
+    if (id === 'publisher') {
+      document.getElementById('publisher').style.width = '100%';
+      document.getElementById('publisher').style.height = '100vh';
+      document.getElementById('publisher').style.position = 'relative';
+      document.getElementById('publisher').style.zIndex = '1';
+      document.getElementById('player').style.width = '300px';
+      document.getElementById('player').style.height = '200px';
+      document.getElementById('player').style.position = 'absolute';
+      document.getElementById('player').style.top = '0';
+      document.getElementById('player').style.zIndex = '999';
+    } else if (id === 'player') {
+      document.getElementById('player').style.width = '100%';
+      document.getElementById('player').style.height = '100vh';
+      document.getElementById('player').style.position = 'relative';
+      document.getElementById('player').style.zIndex = '1';
+      document.getElementById('publisher').style.width = '310px';
+      document.getElementById('publisher').style.height = '200px';
+      document.getElementById('publisher').style.position = 'absolute';
+      document.getElementById('publisher').style.top = '0';
+      document.getElementById('publisher').style.zIndex = '999';
+    }
   }
 </script>
 <style>
@@ -444,6 +440,7 @@
   }
   video {
     object-fit: cover;
+    transform: rotateY(180deg);
   }
   .right-nav {
     position: absolute;
@@ -464,6 +461,7 @@
     /*垂直居中*/
     place-items: center;
     grid-gap: 50px;
+    z-index: 9999;
   }
   .right-nav-img {
     /*width: 40px;*/
@@ -478,18 +476,20 @@
     position: relative;
   }
   #rtc_media_publisher {
-    width: 100vw;
-    height: 100vh;
-    transform: rotateY(180deg);
+    width: 100%;
+    height: 100%;
   }
   #rtc_media_player {
+    width: 100%;
+    height: 100%;
+  }
+  .publisher {
+    width: 100%;
+    height: 100vh;
+  }
+  .player {
     width: 300px;
     height: 200px;
-    position: absolute;
-    top: 0;
-    left: 0;
-  }
-  #player {
     position: absolute;
     top: 0;
     left: 0;
@@ -527,11 +527,11 @@
   video::-webkit-media-controls {
     display:none;
   }
-
+  
   video::-moz-media-controls {
     display:none;
   }
-
+  
   video::-ms-media-controls {
     display:none;
   }
