@@ -46,8 +46,8 @@
         <img class="right-nav-img" src="images/jietu.png" alt="" />
         <p>截图</p>
       </div>
-      <div onclick="handleMicrophone()">
-        <img class="right-nav-img" id="microphone-img" src="images/act_microphone.png" alt="" />
+      <div>
+        <img class="right-nav-img" src="images/maikefeng.png" alt="" />
         <p>麦克风</p>
       </div>
       <div>
@@ -70,6 +70,7 @@
       <canvas id="signatureCanvas"></canvas>
       <img class="sign-close" src="images/close.png" alt="" onclick="cancelSign()"/>
     </div>
+  
   </div>
 
 <!-- 面签信息弹框 -->
@@ -158,8 +159,7 @@
   let rtc_media_publisher = document.getElementById('rtc_media_publisher');
   let rtc_media_player = document.getElementById('rtc_media_player');
   let tts = document.getElementById('tts');
-  let localStream = null;
-  let microphoneStatus = true;
+  
   const canvas = document.getElementById('signatureCanvas');
   const ctx = canvas.getContext('2d');
   let isDrawing = false;
@@ -168,6 +168,10 @@
   
   document.getElementById('video-room').style.display = 'none';
   document.getElementById('sign-box').style.display = 'none';
+
+  let screenshots = []; // 用于保存截图的数组
+  let screenshotDataUrl = null;// 用于保存截图的变量
+  let selectedScreenshotIndex = null;// 当前选中的截图索引（用于删除）
   
   ws.onopen = function () {
     open = true
@@ -181,7 +185,6 @@
       $('#publisher').show()
       publisher = new SrsRtcPublisherAsync()
       $('#rtc_media_publisher').prop('srcObject', publisher.stream)
-      localStream = publisher.stream
       const rtcUrl = 'webrtc://' + host + '/' + $('#txt_room').val() + "/" + userId
       publisher.publish(rtcUrl).then(function (session) {
         // $('#self').text('Self: ' + rtcUrl)
@@ -518,82 +521,10 @@
       document.getElementById('publisher').style.zIndex = '999';
     }
   }
-  function handleMicrophone () {
-    microphoneStatus = !microphoneStatus
-    document.getElementById('microphone-img').src =  microphoneStatus ? 'images/act_microphone.png' : 'images/microphone.png';
-    if(microphoneStatus) {
-      // 打开麦克风
-      unmuted();
-    } else {
-      // 关闭麦克风
-      muted();
-    }
-  }
-  // 关闭麦克风
-  function muted() {
-    if(localStream == null){
-      alert('请打开音视频');
-      return false;
-    }
-    const tracks = localStream.getTracks();
-    tracks.forEach(track => {
-      if(track.kind === 'audio'){
-        track.enabled = false;
-      }
-    });
-    console.log('关闭麦克风')
-  }
-  // 打开麦克风
-  function unmuted() {
-    if(localStream == null){
-      alert('请打开音视频');
-      return false;
-    }
-    const tracks = localStream.getTracks();
-    tracks.forEach(track => {
-      if(track.kind === 'audio'){
-        track.enabled = true;
-      }
-    });
-    console.log('打开麦克风')
-  }
-  
-  // 用于保存截图的变量
-let screenshotDataUrl = null;
-
-// 截图功能
-function captureScreenshot() {
-  if (screenshots.length >= 3) {
-        alert('已达截图图片保存上限（3），无法进行截图！');
-        return;
-      }
-  // 获取视频元素（截取本地视频）
-  const video = document.getElementById('rtc_media_publisher');
-
-  // 创建canvas画布
-  const canvas = document.createElement('canvas');
-  const ctx = canvas.getContext('2d');
-
-  // 设置canvas尺寸与视频一致
-  canvas.width = video.videoWidth;
-  canvas.height = video.videoHeight;
-
-  try {
-    // 将视频画面绘制到canvas
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-    // 将canvas转换为图片并保存
-    screenshotDataUrl = canvas.toDataURL('image/png');
-    console.log('截图成功！');
-    alert('截图已保存！');
-  } catch (error) {
-    console.error('截图失败:', error);
-    alert('截图失败，请确保视频已播放！');
-  }
-}
 
 // 打开面签信息弹框
 function showFaceSignModal() {
+  bindImageZoomEvents(); 
   // 显示弹框
   document.getElementById('faceSignModal').style.display = 'block';
 }
@@ -601,11 +532,6 @@ function showFaceSignModal() {
 function closeFaceSignModal() {
   document.getElementById('faceSignModal').style.display = 'none';
 }
-// 用于保存截图的数组（最多 3 张）
-let screenshots = [];
-
-// 当前选中的截图索引（用于删除）
-let selectedScreenshotIndex = null;
 
 // 截图功能
 function captureScreenshot() {
@@ -696,12 +622,17 @@ function closeImageZoomModal() {
 }
 
 // 绑定图片点击事件（放大功能）
-document.addEventListener('DOMContentLoaded', () => {
-  document.querySelectorAll('.zoomable-image').forEach(image => {
+function bindImageZoomEvents() {
+  const images = document.querySelectorAll('.zoomable-image');
+  images.forEach(image => {
     image.addEventListener('click', () => {
       openImageZoomModal(image.src);
     });
   });
+}
+// 初始化绑定事件
+document.addEventListener('DOMContentLoaded', () => {
+  bindImageZoomEvents(); // 页面加载完成后绑定事件
 });
 </script>
 <style>
