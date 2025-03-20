@@ -26,25 +26,37 @@
       </div>
     </div>
     <div class="right-nav">
-      <div id="playButton">
-        <img class="right-nav-img" src="images/liucheng.png" alt="" />
-        <p>播放音乐</p>
-      </div>
-      <div onclick="switchCamera()">
-        <img class="right-nav-img" src="images/switchcamera.png" alt="" />
-        <p>切换摄像头</p>
-      </div>
-      <div onclick="showSign()">
-        <img class="right-nav-img" src="images/caozuo.png" alt="" />
-        <p>签名</p>
+<!--      <div id="playButton">-->
+<!--        <img class="right-nav-img" src="images/liucheng.png" alt="" />-->
+<!--        <p>播放音乐</p>-->
+<!--      </div>-->
+<!--      <div onclick="switchCamera()">-->
+<!--        <img class="right-nav-img" src="images/switchcamera.png" alt="" />-->
+<!--        <p>切换摄像头</p>-->
+<!--      </div>-->
+<!--      <div onclick="showSign()">-->
+<!--        <img class="right-nav-img" src="images/caozuo.png" alt="" />-->
+<!--        <p>签名</p>-->
+<!--      </div>-->
+      <div>
+        <img class="right-nav-img" src="images/xianxia.png" alt="" />
+        <p>转线下</p>
       </div>
       <div onclick="captureScreenshot()">
-        <img class="right-nav-img" src="images/liucheng.png" alt="" />
+        <img class="right-nav-img" src="images/jietu.png" alt="" />
         <p>截图</p>
+      </div>
+      <div>
+        <img class="right-nav-img" src="images/maikefeng.png" alt="" />
+        <p>麦克风</p>
+      </div>
+      <div>
+        <img class="right-nav-img" src="images/wentihuigu.png" alt="" />
+        <p>问题回顾</p>
       </div>
       <!-- 新增面签信息按钮 -->
       <div onclick="showFaceSignModal()">
-        <img class="right-nav-img" src="images/caozuo.png" alt="" />
+        <img class="right-nav-img" src="images/facesign.png" alt="" />
         <p>面签信息</p>
       </div>
       <div onclick="handleCancel()">
@@ -670,6 +682,7 @@ document.addEventListener('DOMContentLoaded', () => {
     transform: rotateY(180deg);
   }
   .right-nav {
+    background: rgba(0, 0, 0, 0.3);
     position: absolute;
     right: 0;
     top: 50%;
@@ -677,17 +690,17 @@ document.addEventListener('DOMContentLoaded', () => {
     color: #ffffff;
     font-size: 18px;
     text-align: center;
-    padding: 0 10px;
+    padding: 10px 5px;
     display: grid;
     /*垂直三等份*/
     grid-template-rows: repeat(3, 1fr);
     /*垂直居中*/
     place-items: center;
-    grid-gap: 50px;
+    grid-gap: 20px;
     z-index: 9999;
   }
   .right-nav-img {
-    width: 32px;
+    width: 20px;
     margin-bottom: 8px;
   }
   #join-room {
