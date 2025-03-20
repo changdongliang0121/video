@@ -183,8 +183,8 @@
 </div>
 
 <script type="text/javascript">
-  const host = '1panel.haixinyan.xyz:11443'
-  // const host = `${window.location.hostname}:${window.location.port}`
+  // const host = '1panel.haixinyan.xyz:11443'
+  const host = `${window.location.hostname}:${window.location.port}`
   const userId = generateUUID()
   const webSocketUrl = 'wss://' + host + '/websocket'
   const ws = new WebSocket(webSocketUrl)
