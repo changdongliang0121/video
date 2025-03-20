@@ -19,7 +19,7 @@
   <div class="video-room" id="video-room">
     <div class="srs_players">
       <div class="publisher" id="publisher" onclick="fullScreen('publisher')">
-        <video id="rtc_media_publisher" autoplay playsinline></video>
+        <video id="rtc_media_publisher" autoplay playsinline muted></video>
       </div>
       <div class="player hide" id="player"onclick="fullScreen('player')">
         <video id="rtc_media_player" autoplay playsinline></video>
@@ -144,7 +144,8 @@
 </div>
 
 <script type="text/javascript">
-  const host = '1panel.haixinyan.xyz:11443'
+  // const host = '1panel.haixinyan.xyz:11443'
+  const host = `${window.location.hostname}:${window.location.port}`
   const userId = generateUUID()
   const webSocketUrl = 'wss://' + host + '/websocket'
   const ws = new WebSocket(webSocketUrl)
@@ -192,10 +193,11 @@
         // $('#self').text('Self: ' + rtcUrl)
       }).catch(function (reason) {
         publisher.close()
+        alert("publish连接失败")
         console.error(reason)
       })
       
-      getCameraStream();
+      // getCameraStream();
       // 播放音乐
       const message = JSON.parse(r.message)
       console.log('message', message);
@@ -233,6 +235,7 @@
               player: player
             })
           }).catch(function (reason) {
+            alert("play连接失败")
             player.close()
             video.hide()
             console.error(reason)
@@ -424,8 +427,9 @@
     console.log('rtc_media_player', rtc_media_player, player)
     
     publisher.close()
-    rtc_media_publisher.srcObject?.getTracks().forEach(track => track.stop());
-    rtc_media_publisher.srcObject = null;
+    localStream.getTracks().forEach(track => track.stop());
+    // rtc_media_publisher.srcObject?.getTracks().forEach(track => track.stop());
+    // rtc_media_publisher.srcObject = null;
     tts.srcObject?.getTracks().forEach(track => track.stop());
     tts.srcObject = null;
     
@@ -474,7 +478,8 @@
         width: { ideal: 1280 },
         height: { ideal: 720 },
         frameRate: { ideal: 30 }, // 视频流的帧率
-        facingMode: facingMode, // 前置/后置摄像头
+        // facingMode: facingMode, // 前置/后置摄像头
+        facingMode: 'user', // 前置/后置摄像头
       },
       audio: false
     };

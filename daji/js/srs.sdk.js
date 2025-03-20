@@ -33,7 +33,8 @@ function SrsRtcPublisherAsync() {
     self.constraints = {
         audio: true,
         video: {
-            width: {ideal: 320, max: 576}
+            width: {ideal: 320, max: 576},
+            facingMode: 'user', // 前置/后置摄像头
         }
     };
 
