@@ -50,7 +50,7 @@
         <img class="right-nav-img" id="microphone-img" src="images/act_microphone.png" alt="" />
         <p>麦克风</p>
       </div>
-      <div>
+      <div onclick="showQuestionsModal()" id="reviewBtn">
         <img class="right-nav-img" src="images/wentihuigu.png" alt="" />
         <p>问题回顾</p>
       </div>
@@ -70,8 +70,6 @@
       <canvas id="signatureCanvas"></canvas>
       <img class="sign-close" src="images/close.png" alt="" onclick="cancelSign()"/>
     </div>
-  
-  </div>
 
 <!-- 面签信息弹框 -->
 <div id="faceSignModal" style="display: none; position: fixed; bottom: 0; left: 0; width: 100%; background: white; padding: 20px; box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1); z-index: 1000;">
@@ -124,7 +122,9 @@
       <!-- 截图图片动态插入 -->
     </div>
   </div>
-  <button onclick="closeFaceSignModal()" style="margin-top: 20px;">关闭</button>
+  <div style="width: 100%;display: flex;justify-content: center;">
+    <button onclick="closeFaceSignModal()" style="margin-top: 20px;">关闭</button>
+  </div>
 </div>
 
 <!-- 图片放大弹框 -->
@@ -139,8 +139,35 @@
   <button onclick="confirmDelete()">确定</button>
   <button onclick="cancelDelete()">取消</button>
 </div>
+    
+<!-- 问题回顾弹框 -->
+<div class="questionsModal">
+  <div class="modal-content">
+    <!-- 操作区 -->
+    <div class="action-bar">
+      <h3>问题回顾</h3>
+      <div class="switch-btns">
+        <button id="prevBtn" onclick="prevQ()">←</button>
+        <button id="nextBtn" onclick="nextQ()">→</button>
+      </div>
+    </div>
+    <!-- 问题列表 -->
+    <div class="question-list">
+      <div class="question-item">
+        <div class="status-icon"></div>
+        <div class="question-text" id="questionText"></div>
+        <div class="progress" id="progress"></div>
+        <button class="play-btn" onclick="speakQ()">▶</button>
+      </div>
+      <div class="answer-section">
+        <p>参考答案：<span>"是的"</span></p>
+      </div>
+    </div>
+  </div>
 </div>
-<div>
+<!-- 问题回顾：纯文字 -->
+<div class="question-text-other" id="questionTextOther"></div>
+  </div>
 </div>
 
 <script type="text/javascript">
@@ -174,6 +201,17 @@
   let screenshots = []; // 用于保存截图的数组
   let screenshotDataUrl = null;// 用于保存截图的变量
   let selectedScreenshotIndex = null;// 当前选中的截图索引（用于删除）
+
+  const questions = [
+  "请问您的名字是张三吗？",
+  "请问您要办理的业务是车辆的贷款业务吗？"
+  // "请问您在吗？"
+];
+
+let currentQuestion = 0;
+let speech = null;
+let isShowQModal = false
+const questionStates = Array(questions.length).fill(null); // null: 未开始, true: 完成, false: 失败
   
   ws.onopen = function () {
     open = true
@@ -415,32 +453,41 @@
   
   // 挂断
   function handleCancel() {
-    // publisher.close()
-    // if(player) {
-    //   player.close();
-    // }
-    document.getElementById('video-room').style.display = 'none';
-    document.getElementById('join-room').style.display = 'block';
-    console.log('rtc_media_publisher',rtc_media_publisher.srcObject)
-    console.log('rtc_media_player',rtc_media_player.srcObject)
-    console.log('tts',tts.srcObject)
-    console.log('rtc_media_player', rtc_media_player, player)
-    
-    publisher.close()
-    localStream.getTracks().forEach(track => track.stop());
-    // rtc_media_publisher.srcObject?.getTracks().forEach(track => track.stop());
-    // rtc_media_publisher.srcObject = null;
-    tts.srcObject?.getTracks().forEach(track => track.stop());
-    tts.srcObject = null;
-    
-    if(player) {
-      player.close();
-      rtc_media_player.srcObject?.getTracks().forEach(track => track.stop());
-      rtc_media_player.srcObject = null;
+    //判断问题回顾是否执行完毕
+    if (questionStates.every(state => state === true)) {
+      // publisher.close()
+      // if(player) {
+      //   player.close();
+      // }
+      document.getElementById('video-room').style.display = 'none';
+      document.getElementById('join-room').style.display = 'block';
+      console.log('rtc_media_publisher',rtc_media_publisher.srcObject)
+      console.log('rtc_media_player',rtc_media_player.srcObject)
+      console.log('tts',tts.srcObject)
+      console.log('rtc_media_player', rtc_media_player, player)
+      
+      publisher.close()
+      localStream.getTracks().forEach(track => track.stop());
+      // rtc_media_publisher.srcObject?.getTracks().forEach(track => track.stop());
+      // rtc_media_publisher.srcObject = null;
+      tts.srcObject?.getTracks().forEach(track => track.stop());
+      tts.srcObject = null;
+      
+      if(player) {
+        player.close();
+        rtc_media_player.srcObject?.getTracks().forEach(track => track.stop());
+        rtc_media_player.srcObject = null;
+      }
+      cancelSign()
+      //关闭面签信息弹框
+      closeFaceSignModal()
+      //关闭问题回顾弹框
+      closeQuestionsModal()
+      closeQuestionTextOther()
+    } else {
+      alert('存在未播报完成的节点话术，建议重新播报');
+      return
     }
-    cancelSign()
-    //关闭面签信息弹框
-    closeFaceSignModal()
   }
   
   // 签名
@@ -573,6 +620,8 @@ function showFaceSignModal() {
   bindImageZoomEvents();
   // 显示弹框
   document.getElementById('faceSignModal').style.display = 'block';
+  //关闭问题回顾弹框
+  closeQuestionsModal()
 }
 // 关闭面签信息弹框
 function closeFaceSignModal() {
@@ -581,8 +630,8 @@ function closeFaceSignModal() {
 
 // 截图功能
 function captureScreenshot() {
-  if (screenshots.length >= 3) {
-    alert('已达截图图片保存上限（3），无法进行截图！');
+  if (screenshots.length > 20) {
+    alert('已达截图图片保存上限（20），无法进行截图！');
     return;
   }
 
@@ -680,6 +729,100 @@ function bindImageZoomEvents() {
 document.addEventListener('DOMContentLoaded', () => {
   bindImageZoomEvents(); // 页面加载完成后绑定事件
 });
+
+//打开问题回顾弹框
+function showQuestionsModal(){
+  isShowQModal = !isShowQModal
+  if(isShowQModal){
+    document.querySelector('.questionsModal').style.display = 'block';
+    //展示问题列表
+    updateQuestion();
+    //关闭面签信息弹框
+    closeFaceSignModal()
+  }else{
+    closeQuestionsModal()
+  }
+}
+
+//关闭问题回顾弹框
+function closeQuestionsModal(){
+  document.querySelector('.questionsModal').style.display = 'none';  
+  showQuestionTextOther()
+  isShowQModal =false
+}
+//问题回顾客户端展示
+function showQuestionTextOther(){
+  document.getElementById('questionTextOther').style.display = 'block';
+}
+//问题回顾客户端关闭
+function closeQuestionTextOther(){
+  document.getElementById('questionTextOther').style.display = 'none';
+}
+
+//问题列表
+function updateQuestion() {
+  document.getElementById('questionText').textContent = questions[currentQuestion];
+  document.getElementById('questionTextOther').textContent = questions[currentQuestion];
+  document.getElementById('progress').textContent = `${currentQuestion + 1}/${questions.length}`;
+  updateStatusIcon();
+}
+//更新节点状态
+function updateStatusIcon() {
+  const icon = document.querySelector('.status-icon');
+  icon.className = 'status-icon';
+  if (questionStates[currentQuestion] === true) {
+    icon.classList.add('completed');
+  } else if (questionStates[currentQuestion] === false) {
+    icon.classList.add('failed');
+  }
+}
+//语音播报
+function speakQ(){
+  document.querySelectorAll('.play-btn').forEach(btn => {
+    if (speech) speech.cancel();
+    
+    // 语音播报逻辑
+    const utterance = new SpeechSynthesisUtterance(questions[currentQuestion]);
+    speech = window.speechSynthesis.speak(utterance);
+    
+    // 更新状态为正在播放
+    questionStates[currentQuestion] = null;
+    document.querySelector('.status-icon').classList.add('playing');
+    
+    utterance.onend = () => {
+      questionStates[currentQuestion] = true;
+      updateStatusIcon();
+    };
+    
+    utterance.onerror = () => {
+      questionStates[currentQuestion] = false;
+      updateStatusIcon();
+    };
+  });
+
+}
+
+// 切换问题
+function prevQ(){
+  if (currentQuestion > 0) {
+    if (speech) {
+      speech.cancel();
+      questionStates[currentQuestion] = false;
+    }
+    currentQuestion--;
+    updateQuestion();
+  }
+}
+function nextQ(){
+  if (currentQuestion < questions.length - 1) {
+    if (speech) {
+      speech.cancel();
+      questionStates[currentQuestion] = false;
+    }
+    currentQuestion++;
+    updateQuestion();
+  }
+}
 </script>
 <style>
   * {
@@ -703,7 +846,7 @@ document.addEventListener('DOMContentLoaded', () => {
     background: rgba(0, 0, 0, 0.3);
     position: absolute;
     right: 0;
-    top: 50%;
+    top: 35%;
     transform: translateY(-50%);
     color: #ffffff;
     font-size: 18px;
@@ -775,6 +918,9 @@ document.addEventListener('DOMContentLoaded', () => {
   bottom: 0;
   left: 0;
   width: 100%;
+  height:65%;
+  overflow: auto;
+  border-radius: 15px;
   background: white;
   padding: 20px;
   box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
@@ -820,6 +966,106 @@ button {
 
 button:hover {
   background: #0056b3;
+}
+
+.questionsModal {
+  display: none;
+  position: fixed;
+  bottom: 0px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  background: white;
+  border-radius: 15px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.3);
+  z-index: 1000;
+}
+
+.action-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px;
+  border-bottom: 1px solid #ddd;
+}
+
+.switch-btns button {
+  margin-left: 10px;
+  padding: 5px 10px;
+}
+
+.question-list {
+  background: #f5f5f5;
+  padding: 15px;
+}
+
+.question-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
+.question-text{
+  flex: 0.99;
+}
+.question-text-other{
+  display: none;
+  position: fixed;
+  bottom: 0px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  background: white;
+  border-radius: 15px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.3);
+  z-index: 1000;
+  background-color: rgba(255, 255, 255, 0.5); /* 白色背景，50% 透明度 */
+  padding: 20px; /* 内边距 */
+  color: #fff; /* 文字颜色 */
+  font-size: 16px; /* 文字大小 */
+  text-align: center; /* 文字居中 */
+  border-radius: 8px; /* 圆角 */
+  z-index: 99;
+}
+.play-btn{
+  margin-left:5px;
+}
+.progress{
+  margin-bottom:0px;
+}
+.status-icon {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  margin-right: 10px;
+}
+
+.status-icon.completed {
+  background: #4CAF50;
+  position: relative;
+}
+.status-icon.completed::after {
+  content: '✓';
+  color: white;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.status-icon.failed {
+  background: #f44336;
+}
+.status-icon.failed::after {
+  content: '•';
+  color: white;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.status-icon.playing {
+  background: #2196F3;
 }
 </style>
 </body>
