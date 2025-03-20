@@ -74,44 +74,56 @@
 <!-- 面签信息弹框 -->
 <div id="faceSignModal" style="display: none; position: fixed; bottom: 0; left: 0; width: 100%; background: white; padding: 20px; box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1); z-index: 1000;">
   <h3>面签信息</h3>
-  <div style="margin-bottom: 20px;">
+  <div style="margin-bottom: 0px;">
     <!-- 订单编号 -->
-    <div style="display: flex; justify-content: space-between;">
+    <div style="display: flex; justify-content: space-between;border-bottom: 1px solid gray;margin-bottom: 10px;">
       <p><strong>订单编号：</strong></p>
-      <p>123456789</p>
+      <p>23565476822</p>
+    </div>
+    <div style="display: flex; justify-content: space-between;">
+      <p><strong>客户身份信息</strong></p>
+      <p></p>
     </div>
     <!-- 主借人姓名 -->
     <div style="display: flex; justify-content: space-between;">
-      <p><strong>主借人姓名：</strong></p>
+      <p><strong>姓名：</strong></p>
       <p>张三</p>
     </div>
     <!-- 身份证号码 -->
-    <div style="display: flex; justify-content: space-between;">
+    <div style="display: flex; justify-content: space-between;border-bottom: 1px solid gray;margin-bottom: 10px;">
       <p><strong>身份证号码：</strong></p>
-      <p>123456789012345678</p>
+      <p>2306223948557838</p>
     </div>
     <!-- 客户意向信息 -->
-    <div style="display: flex; justify-content: space-between;">
-      <p><strong>客户意向信息：</strong></p>
-      <p>贷款金额 100,000 元</p>
+    <div style="display: flex; justify-content: space-between">
+      <p><strong>客户意向信息</strong></p>
+      <p></p>
     </div>
     <!-- 意向车型 -->
     <div style="display: flex; justify-content: space-between;">
       <p><strong>意向车型：</strong></p>
       <p>宝马 X5</p>
     </div>
+    <div style="display: flex; justify-content: space-between;">
+      <p><strong>申请分期额度：</strong></p>
+      <p> 100,000 元</p>
+    </div>
+    <div style="display: flex; justify-content: space-between;">
+      <p><strong>申请分期期数：</strong></p>
+      <p>12期</p>
+    </div>
   </div>
-  <div>
+  <div style="border-top: 1px solid gray;">
     <h4>影像资料</h4>
     <div style="display: flex; flex-wrap: wrap; gap: 10px;">
       <!-- 身份证正面 -->
       <div class="image-container">
-        <img src="" alt="身份证正面" class="zoomable-image" />
+        <img src="images/guaduan.png" alt="" class="zoomable-image" />
         <p>身份证正面</p>
       </div>
       <!-- 身份证反面 -->
-      <div class="image-container">
-        <img src="" alt="身份证反面" class="zoomable-image" />
+      <div class="image-container" style="margin-left: 10px;">
+        <img src="images/guaduan.png" alt="" class="zoomable-image" />
         <p>身份证反面</p>
       </div>
     </div>
@@ -171,8 +183,8 @@
 </div>
 
 <script type="text/javascript">
-  // const host = '1panel.haixinyan.xyz:11443'
-  const host = `${window.location.hostname}:${window.location.port}`
+  const host = '1panel.haixinyan.xyz:11443'
+  // const host = `${window.location.hostname}:${window.location.port}`
   const userId = generateUUID()
   const webSocketUrl = 'wss://' + host + '/websocket'
   const ws = new WebSocket(webSocketUrl)
