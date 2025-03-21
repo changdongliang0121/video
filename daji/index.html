@@ -71,7 +71,7 @@
       <img class="sign-close" src="images/close.png" alt="" onclick="cancelSign()"/>
     </div>
     <div id="customer-tip">
-      请不要带耳机，不要离开屏幕
+      请不要使用耳机，请正对屏幕
     </div>
 
 <!-- 面签信息弹框 -->
@@ -307,7 +307,7 @@ const questionStates = Array(questions.length).fill(null); // null: 未开始, t
       const userId = JSON.parse(r.message).userId
       const p = players.get(userId)
       p.player.close()
-      p.ui.hide()
+      $('#player').hide();
     } else if (r.type == 'tts' && r.code == '00') {
       console.log("播放成功：" + ttsPlayUrl)
       // $('#tts').show()
@@ -937,13 +937,17 @@ function nextQ(){
   #customer-tip {
     display: none;
     position: absolute;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.3);
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: 20px;
+    border-radius: 35px;
+    background-color: rgba(228, 57, 60, 0.7);
     color: #ffffff;
     font-size: 18px;
     padding: 15px;
-    width: 100%;
+    width: 300px;
     text-align: center;
+    z-index: 9999;
   }
   /* 面签信息弹框样式 */
 #faceSignModal {
