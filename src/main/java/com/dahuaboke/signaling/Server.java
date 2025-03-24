@@ -1,6 +1,8 @@
 package com.dahuaboke.signaling;
 
 import com.dahuaboke.signaling.constants.Constant;
+import com.dahuaboke.signaling.handler.EndExcuteHandler;
+import com.dahuaboke.signaling.handler.HttpForwardHandler;
 import com.dahuaboke.signaling.handler.WebSocketHandler;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;
@@ -39,6 +41,7 @@ public class Server {
                             // 对httpMessage进行聚合，聚合成FullHttpRequest或FullHttpResponse
                             // 几乎在netty中的编程，都会使用到此hanler
                             pipeline.addLast(new HttpObjectAggregator(1024 * 64));
+                            pipeline.addLast(new HttpForwardHandler());
                             /**
                              * websocket 服务器处理的协议，用于指定给客户端连接访问的路由 : /ws
                              * 本handler会帮你处理一些繁重的复杂的事
@@ -47,6 +50,7 @@ public class Server {
                              */
                             pipeline.addLast(new WebSocketServerProtocolHandler("/websocket"));
                             pipeline.addLast(new WebSocketHandler());
+                            pipeline.addLast(new EndExcuteHandler());
                         }
                     })
                     .option(ChannelOption.SO_BACKLOG, 128)

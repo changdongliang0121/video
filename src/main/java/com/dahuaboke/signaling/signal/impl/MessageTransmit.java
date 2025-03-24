@@ -1,13 +1,14 @@
-package com.dahuaboke.signaling.signal;
+package com.dahuaboke.signaling.signal.impl;
 
 import com.dahuaboke.signaling.model.Cache;
+import com.dahuaboke.signaling.signal.Signal;
 import com.dahuaboke.signaling.vo.BaseInVo;
 
 /**
  * author: dahua
  * date: 2025/2/13 9:53
  */
-public class MessageTransmit implements Signal{
+public class MessageTransmit implements Signal {
 
     @Override
     public void run(BaseInVo baseInVo, String text) {

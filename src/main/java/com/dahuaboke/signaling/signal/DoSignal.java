@@ -1,5 +1,9 @@
 package com.dahuaboke.signaling.signal;
 
+import com.dahuaboke.signaling.signal.impl.CreateOrEnterRoom;
+import com.dahuaboke.signaling.signal.impl.LeaveRoom;
+import com.dahuaboke.signaling.signal.impl.MessageTransmit;
+import com.dahuaboke.signaling.signal.impl.TTS;
 import com.dahuaboke.signaling.util.WriteUtil;
 import com.dahuaboke.signaling.vo.BaseInVo;
 import com.dahuaboke.signaling.vo.Result;
@@ -42,8 +46,6 @@ public class DoSignal {
     static {
         signals.put(SignalType.CREATE_ORENTER_ROOM, new CreateOrEnterRoom());
         signals.put(SignalType.LEAVE_ROOM, new LeaveRoom());
-        signals.put(SignalType.ADDORUPDATE_STREAM, new AddOrUpdateStream());
-        signals.put(SignalType.REMOVE_STREAM, new RemoveStream());
         signals.put(SignalType.TTS, new TTS());
         signals.put(SignalType.TRANSMIT, new MessageTransmit());
     }

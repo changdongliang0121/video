@@ -17,8 +17,6 @@ public class Constant {
 
     public static String WATER_PNG;
 
-    public static String localMp3Path;
-
     public static String FILE_DOWNLOAD_URL;
 
     public static String SRS_SERVER_HOST;
@@ -33,6 +31,14 @@ public class Constant {
 
     public static String FFMPEG_PATH;
 
+    public static String[] questionArr = new String[]{
+            "请问您的姓名是张三吗?"
+    };
+
+    public static String[] fileArr = new String[]{
+            "20250321_110420.m4a"
+    };
+
 
     static{
         Properties properties = new Properties();
@@ -45,7 +51,6 @@ public class Constant {
         FILE_ROOT_PATH = properties.getProperty("fileRootPath");
         LOCAL_ROOT_PATH = properties.getProperty("localRootPath");
         WATER_PNG = properties.getProperty("waterPng");
-        localMp3Path = properties.getProperty("localMp3Path");
         FILE_DOWNLOAD_URL = properties.getProperty("fileDownloadUrl");
         SRS_SERVER_HOST = properties.getProperty("srsServerHost");
         SRS_SERVER_SSH_PORT = Integer.parseInt(properties.getProperty("srsServerSshPort"));

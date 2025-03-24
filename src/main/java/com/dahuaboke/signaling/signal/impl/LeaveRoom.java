@@ -1,9 +1,9 @@
-package com.dahuaboke.signaling.signal;
+package com.dahuaboke.signaling.signal.impl;
 
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
 import com.dahuaboke.signaling.model.Cache;
-import com.dahuaboke.signaling.util.FFmpegUtil;
+import com.dahuaboke.signaling.signal.Signal;
 import com.dahuaboke.signaling.vo.BaseInVo;
 import com.dahuaboke.signaling.vo.Result;
 
