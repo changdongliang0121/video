@@ -32,11 +32,13 @@ public class Constant {
     public static String FFMPEG_PATH;
 
     public static String[] questionArr = new String[]{
-            "请问您的姓名是张三吗?"
+            "请问您的姓名是张三吗?",
+            "请问您要办理的业务是贷款业务吗"
     };
 
     public static String[] fileArr = new String[]{
-            "20250321_110420.m4a"
+            "20250324_1.m4a",
+            "20250321_2.m4a"
     };
 
 

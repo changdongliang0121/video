@@ -188,7 +188,7 @@
 <script type="text/javascript">
   // const host = '1panel.haixinyan.xyz:11443'
   const host = `${window.location.hostname}:${window.location.port}`
-  const adminList = ['zy', 'bjx'];
+  const adminList = ['zy', 'bjx','jjp'];
   const isAdmin = !!adminList.find(o => window.location.href.includes(o));  //客户经理
   const userId = generateUUID()
   const webSocketUrl = 'wss://' + host + '/websocket'
@@ -211,7 +211,7 @@
   let isDrawing = false;
   let lastX = 0;
   let lastY = 0;
-  
+
   document.getElementById('video-room').style.display = 'none';
   document.getElementById('sign-box').style.display = 'none';
   console.log('isAdmin', isAdmin)
@@ -235,11 +235,11 @@ let currentQuestion = 0;
 let speech = null;
 let isShowQModal = false
 const questionStates = Array(questions.length).fill(null); // null: 未开始, true: 完成, false: 失败
-  
+
   ws.onopen = function () {
     open = true
   }
-  
+
   ws.onmessage = function (event) {
     const r = JSON.parse(event.data)
     console.log(r)
@@ -257,7 +257,7 @@ const questionStates = Array(questions.length).fill(null); // null: 未开始, t
         alert("publish连接失败")
         console.error(reason)
       })
-      
+
       // getCameraStream();
       // 播放音乐
       const message = JSON.parse(r.message)
@@ -275,7 +275,7 @@ const questionStates = Array(questions.length).fill(null); // null: 未开始, t
         playertts.close()
         console.error(reason)
       })
-      
+
     } else if (r.type && r.type == 'roomMessage' && r.code == '00') {
       const message = JSON.parse(r.message)
       const roomId = message.roomId
@@ -337,7 +337,7 @@ const questionStates = Array(questions.length).fill(null); // null: 未开始, t
       }
     }
   }
-  
+
   ws.onclose = function(event) {
     console.log(`Connection closed with code ${event.code} and reason ${event.reason}`);
   };
@@ -350,11 +350,11 @@ const questionStates = Array(questions.length).fill(null); // null: 未开始, t
       alert("webSocket连接失败")
     }
   }
-  
+
   function close() {
     ws.close()
   }
-  
+
   function createRoom() {
     send({
       "type": "createOrEnterRoom",
@@ -362,7 +362,7 @@ const questionStates = Array(questions.length).fill(null); // null: 未开始, t
       "userId": userId
     })
   }
-  
+
   function playMusic() {
     send({
       "type": "tts",
@@ -391,8 +391,8 @@ const questionStates = Array(questions.length).fill(null); // null: 未开始, t
       return v.toString(16)
     })
   }
-  
-  
+
+
   // 开始绘制
   canvas.addEventListener('touchstart', (e) => {
     e.preventDefault(); // 防止默认的触摸行为
@@ -400,21 +400,21 @@ const questionStates = Array(questions.length).fill(null); // null: 未开始, t
     const touch = e.touches[0];
     [lastX, lastY] = [touch.pageX - canvas.offsetLeft, touch.pageY - canvas.offsetTop];
   });
-  
+
   canvas.addEventListener('touchmove', (e) => {
     e.preventDefault(); // 防止默认的触摸行为
     if (isDrawing) {
       const touch = e.touches[0];
       const currentX = touch.pageX - canvas.offsetLeft;
       const currentY = touch.pageY - canvas.offsetTop;
-      
+
       ctx.beginPath();
       ctx.moveTo(lastX, lastY);
       ctx.lineTo(currentX, currentY);
       ctx.stroke();
-      
-      
-      
+
+
+
       send({
         "type": "transmit",
         "childType":"draw",
@@ -431,20 +431,20 @@ const questionStates = Array(questions.length).fill(null); // null: 未开始, t
       lastY = currentY;
     }
   });
-  
-  
-  
+
+
+
   // 结束绘制
   canvas.addEventListener('touchend', () => {
     isDrawing = false;
   });
-  
+
   // 开始绘制
   canvas.addEventListener('mousedown', (e) => {
     isDrawing = true;
     [lastX, lastY] = [e.offsetX, e.offsetY];
   });
-  
+
   // 绘制过程
   canvas.addEventListener('mousemove', (e) => {
     if (isDrawing) {
@@ -452,7 +452,7 @@ const questionStates = Array(questions.length).fill(null); // null: 未开始, t
       ctx.moveTo(lastX, lastY);
       ctx.lineTo(e.offsetX, e.offsetY);
       ctx.stroke();
-      
+
       send({
         "type": "transmit",
         "childType":"draw",
@@ -468,12 +468,12 @@ const questionStates = Array(questions.length).fill(null); // null: 未开始, t
       [lastX, lastY] = [e.offsetX, e.offsetY];
     }
   });
-  
+
   // 结束绘制
   canvas.addEventListener('mouseup', () => {
     isDrawing = false;
   });
-  
+
   // 挂断
   function handleCancel() {
     //判断问题回顾是否执行完毕
@@ -488,14 +488,14 @@ const questionStates = Array(questions.length).fill(null); // null: 未开始, t
       console.log('rtc_media_player',rtc_media_player.srcObject)
       console.log('tts',tts.srcObject)
       console.log('rtc_media_player', rtc_media_player, player)
-      
+
       publisher.close()
       localStream.getTracks().forEach(track => track.stop());
       // rtc_media_publisher.srcObject?.getTracks().forEach(track => track.stop());
       // rtc_media_publisher.srcObject = null;
       tts.srcObject?.getTracks().forEach(track => track.stop());
       tts.srcObject = null;
-      
+
       if(player) {
         player.close();
         rtc_media_player.srcObject?.getTracks().forEach(track => track.stop());
@@ -512,18 +512,18 @@ const questionStates = Array(questions.length).fill(null); // null: 未开始, t
       return
     }
   }
-  
+
   // 签名
   function showSign() {
     console.log('签名')
     document.getElementById('sign-box').style.display = 'block';
   }
-  
+
   // 关闭签名
   function cancelSign () {
     document.getElementById('sign-box').style.display = 'none';
   }
-  
+
   // 切换摄像头
   function switchCamera() {
     if (!isMobile()) return;
@@ -541,7 +541,7 @@ const questionStates = Array(questions.length).fill(null); // null: 未开始, t
     // 重新获取流并设置新的facingMode
     getCameraStream();
   }
-  
+
   function getCameraStream() {
     const constraints = {
       video: {
@@ -559,7 +559,7 @@ const questionStates = Array(questions.length).fill(null); // null: 未开始, t
       console.error("获取媒体设备失败:", error);
     });
   }
-  
+
   // 判断是否为移动设备
   function isMobile() {
     return (
@@ -572,7 +572,7 @@ const questionStates = Array(questions.length).fill(null); // null: 未开始, t
       navigator.userAgent.indexOf('Opera Mini') !== -1
     );
   }
-  
+
   // 全屏
   function fullScreen(id) {
     console.log('id',id,document.getElementById('rtc_media_player').style)
@@ -803,20 +803,20 @@ function updateStatusIcon() {
 function speakQ(){
   document.querySelectorAll('.play-btn').forEach(btn => {
     if (speech) speech.cancel();
-    
+
     // 语音播报逻辑
     const utterance = new SpeechSynthesisUtterance(questions[currentQuestion]);
     speech = window.speechSynthesis.speak(utterance);
-    
+
     // 更新状态为正在播放
     questionStates[currentQuestion] = null;
     document.querySelector('.status-icon').classList.add('playing');
-    
+
     utterance.onend = () => {
       questionStates[currentQuestion] = true;
       updateStatusIcon();
     };
-    
+
     utterance.onerror = () => {
       questionStates[currentQuestion] = false;
       updateStatusIcon();

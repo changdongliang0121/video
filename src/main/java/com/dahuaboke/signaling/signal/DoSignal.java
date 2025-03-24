@@ -18,8 +18,6 @@ public class DoSignal {
     public enum SignalType {
         CREATE_ORENTER_ROOM("createOrEnterRoom"),
         LEAVE_ROOM("leaveRoom"),
-        ADDORUPDATE_STREAM("addOrUpdateStream"),
-        REMOVE_STREAM("removeStream"),
         TTS("tts"),
         TRANSMIT("transmit");
 

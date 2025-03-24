@@ -35,7 +35,7 @@ public class WebSocketHandler extends SimpleChannelInboundHandler<TextWebSocketF
             WriteUtil.write(channel, Result.fail("error", "报文转换错误"));
             return;
         }
-        if (baseInvo.getType() == null || baseInvo.getType().length() == 0) {
+        if (baseInvo.getType() == null || baseInvo.getType().isEmpty()) {
             WriteUtil.write(channel, Result.fail("error", "type不能为空"));
             return;
         }
