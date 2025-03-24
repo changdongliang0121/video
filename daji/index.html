@@ -241,7 +241,9 @@ let currentQuestion = 0;
 let speech = null;
 let isShowQModal = false
 const questionStates = Array(questions.length).fill(null); // null: 未开始, true: 完成, false: 失败
-  
+  //初始化面签信息
+  initDetail()
+
   ws.onopen = function () {
     open = true
   }
@@ -512,7 +514,6 @@ const questionStates = Array(questions.length).fill(null); // null: 未开始, t
       closeFaceSignModal()
       //关闭问题回顾弹框
       closeQuestionsModal()
-      closeQuestionTextOther()
     } else {
       alert('存在未播报完成的节点话术，建议重新播报');
       return
@@ -776,7 +777,6 @@ function showQuestionsModal(){
 //关闭问题回顾弹框
 function closeQuestionsModal(){
   document.querySelector('.questionsModal').style.display = 'none';
-  showQuestionTextOther()
   isShowQModal =false
 }
 //问题回顾客户端展示
@@ -805,52 +805,74 @@ function updateStatusIcon() {
     icon.classList.add('failed');
   }
 }
-// 动态插入问题描述
-function updateFaceSignDetails(index) {
+// 初始化面签详情
+function initializeFaceSignDetails() {
   const questionDetailsList = document.getElementById('questionDetailsList');
+  questionDetailsList.innerHTML = ''; // 清空列表
 
-  // 如果问题已经插入过，则不再重复插入
-  if (questionDetailsList.querySelector(`[data-index="${index}"]`)) {
-    return;
+  questions.forEach((question, index) => {
+    // 创建问题描述的 div
+    const questionDetail = document.createElement('div');
+    questionDetail.className = 'question-detail';
+    questionDetail.setAttribute('data-index', index); // 设置 data-index 属性
+
+    // 上半部分：图标 + 问题描述
+    const questionTop = document.createElement('div');
+    questionTop.className = 'question-top';
+
+    const questionIcon = document.createElement('div');
+    questionIcon.className = 'question-icon';
+    questionTop.appendChild(questionIcon);
+
+    const questionText = document.createElement('div');
+    questionText.className = 'question-text';
+    questionText.textContent = question; // 问题描述文字
+    questionTop.appendChild(questionText);
+
+    questionDetail.appendChild(questionTop);
+
+    // 下半部分：状态图标 + 通过/不通过
+    const questionBottom = document.createElement('div');
+    questionBottom.className = 'question-bottom';
+
+    const statusIcon = document.createElement('div');
+    statusIcon.className = 'status-icon-detail failed'; // 初始状态为不通过
+    questionBottom.appendChild(statusIcon);
+
+    const statusText = document.createElement('div');
+    statusText.className = 'status-text';
+    statusText.textContent = '不通过'; // 初始状态为不通过
+    questionBottom.appendChild(statusText);
+
+    questionDetail.appendChild(questionBottom);
+
+    // 将问题描述的 div 插入到列表中
+    questionDetailsList.appendChild(questionDetail);
+  });
+}
+// 更新问题状态
+function updateQuestionStatus(index, isCompleted) {
+  console.log('更新问题状态', isCompleted)
+  const questionDetail = document.querySelector(`.question-detail[data-index="${index}"]`);
+  if (!questionDetail) return;
+
+  const statusIcon = questionDetail.querySelector('.status-icon-detail');
+  const statusText = questionDetail.querySelector('.status-text');
+
+  if (isCompleted) {
+  console.log('statusIcon.classList', statusIcon.classList)
+    statusIcon.classList.remove('failed');
+    statusIcon.classList.add('completed');
+    statusText.textContent = '通过';
+  } else {
+    statusIcon.classList.remove('completed');
+    statusIcon.classList.add('failed');
+    statusText.textContent = '不通过';
   }
-
-  // 创建问题描述的 div
-  const questionDetail = document.createElement('div');
-  questionDetail.className = 'question-detail';
-  questionDetail.setAttribute('data-index', index); // 设置 data-index 属性
-
-  // 上半部分：图标 + 问题描述
-  const questionTop = document.createElement('div');
-  questionTop.className = 'question-top';
-
-  const questionIcon = document.createElement('div');
-  questionIcon.className = 'question-icon';
-  questionTop.appendChild(questionIcon);
-
-  const questionText = document.createElement('div');
-  questionText.className = 'question-text';
-  questionText.textContent = questions[index]; // 问题描述文字
-  questionTop.appendChild(questionText);
-
-  questionDetail.appendChild(questionTop);
-
-  // 下半部分：状态图标 + 通过/不通过
-  const questionBottom = document.createElement('div');
-  questionBottom.className = 'question-bottom';
-
-  const statusIcon = document.createElement('div');
-  statusIcon.className = 'status-icon ' + (questionStates[index] ? 'completed' : 'failed');
-  questionBottom.appendChild(statusIcon);
-
-  const statusText = document.createElement('div');
-  statusText.className = 'status-text';
-  statusText.textContent = questionStates[index] ? '通过' : '不通过'; // 状态文字
-  questionBottom.appendChild(statusText);
-
-  questionDetail.appendChild(questionBottom);
-
-  // 将问题描述的 div 插入到列表中
-  questionDetailsList.appendChild(questionDetail);
+}
+// 页面加载时初始化面签详情
+function initDetail(){
+  document.addEventListener('DOMContentLoaded', initializeFaceSignDetails);
 }
 //语音播报
 function speakQ(){
@@ -860,7 +882,10 @@ function speakQ(){
     // 语音播报逻辑
     const utterance = new SpeechSynthesisUtterance(questions[currentQuestion]);
     speech = window.speechSynthesis.speak(utterance);
-    
+
+    //播放时展示面板
+    showQuestionTextOther()
+
     // 更新状态为正在播放
     questionStates[currentQuestion] = null;
     document.querySelector('.status-icon').classList.add('playing');
@@ -869,15 +894,15 @@ function speakQ(){
     utterance.onend = () => {
       questionStates[currentQuestion] = true;
       updateStatusIcon();
-      updateFaceSignDetails(currentQuestion); // 动态插入问题描述
-      closeQuestionTextOther()//播放完了就消失
+      updateQuestionStatus(currentQuestion, true); // 更新面签详情状态
+      closeQuestionTextOther(); // 播放完了隐藏面板
     };
     
     // 播放异常
     utterance.onerror = () => {
       questionStates[currentQuestion] = false;
       updateStatusIcon();
-      updateFaceSignDetails(currentQuestion); // 动态插入问题描述
+      updateQuestionStatus(currentQuestion, false); // 更新面签详情状态
     };
   });
 
@@ -889,7 +914,6 @@ function prevQ(){
     if (speech) {
       speech.cancel();
       questionStates[currentQuestion] = false;
-      updateFaceSignDetails(currentQuestion); // 动态插入问题描述
     }
     currentQuestion--;
     updateQuestion();
@@ -900,7 +924,6 @@ function nextQ(){
     if (speech) {
       speech.cancel();
       questionStates[currentQuestion] = false;
-      updateFaceSignDetails(currentQuestion); // 动态插入问题描述
     }
     currentQuestion++;
     updateQuestion();
@@ -1220,21 +1243,39 @@ button:hover {
 }
 
 /* 状态图标 */
-.status-icon {
+.status-icon-detail {
   width: 20px;
   height: 20px;
   border-radius: 50%;
   margin-right: 10px;
 }
 
-.status-icon.completed {
+.status-icon-detail.completed {
   background-color: #4CAF50; /* 绿色背景 */
+  position: relative;
+}
+.status-icon-detail.completed::after {
+  content: '✓';
+  color: white;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
 }
 
-.status-icon.failed {
+.status-icon-detail.failed {
   background-color: #f44336; /* 红色背景 */
+  position: relative;
 }
 
+.status-icon-detail::after {
+  content: '✓';
+  color: white;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
 /* 通过/不通过文字 */
 .status-text {
   font-size: 14px;
