@@ -10,25 +10,1102 @@
 <script type="text/javascript" src="js/jquery-1.12.2.min.js"></script>
 <script type="text/javascript" src="js/srs.sdk.js"></script>
 <script type="text/javascript" src="js/adapter-7.4.0.js"></script>
+<div class="container">
+  <div class="form-inline" id="join-room">
+    房间号:
+    <input type="text" id="txt_room" size="medium" class="input-medium" width="150">
+    <button class="btn btn-primary" id="btn_join" style="margin: 0 10px" onclick="createRoom()">加入房间</button>
+  </div>
+  <div class="video-room" id="video-room">
+    <div class="srs_players">
+      <div class="publisher" id="publisher" onclick="fullScreen('publisher')">
+        <video id="rtc_media_publisher" autoplay playsinline muted></video>
+      </div>
+      <div class="player hide" id="player"onclick="fullScreen('player')">
+        <video id="rtc_media_player" autoplay playsinline></video>
+      </div>
+    </div>
+    <div id="right-nav" class="right-nav">
+<!--      <div id="playButton">-->
+<!--        <img class="right-nav-img" src="images/liucheng.png" alt="" />-->
+<!--        <p>播放音乐</p>-->
+<!--      </div>-->
+<!--      <div onclick="switchCamera()">-->
+<!--        <img class="right-nav-img" src="images/switchcamera.png" alt="" />-->
+<!--        <p>切换摄像头</p>-->
+<!--      </div>-->
+<!--      <div onclick="showSign()">-->
+<!--        <img class="right-nav-img" src="images/caozuo.png" alt="" />-->
+<!--        <p>签名</p>-->
+<!--      </div>-->
+      <div>
+        <img class="right-nav-img" src="images/xianxia.png" alt="" />
+        <p>转线下</p>
+      </div>
+      <div onclick="captureScreenshot()">
+        <img class="right-nav-img" src="images/jietu.png" alt="" />
+        <p>截图</p>
+      </div>
+      <div onclick="handleMicrophone()">
+        <img class="right-nav-img" id="microphone-img" src="images/act_microphone.png" alt="" />
+        <p>麦克风</p>
+      </div>
+      <div onclick="showQuestionsModal()" id="reviewBtn">
+        <img class="right-nav-img" src="images/wentihuigu.png" alt="" />
+        <p>问题回顾</p>
+      </div>
+      <!-- 新增面签信息按钮 -->
+      <div onclick="showFaceSignModal()">
+        <img class="right-nav-img" src="images/facesign.png" alt="" />
+        <p>面签信息</p>
+      </div>
+      <div onclick="handleCancel()">
+        <img class="right-nav-img" src="images/guaduan.png" alt="" />
+        <p>挂断</p>
+      </div>
+    </div>
+    <audio id="tts" width="310" autoplay controls style="display: none;"></audio>
+    <!--    <canvas id="signatureCanvas" width="500" height="300"></canvas>-->
+    <div id="sign-box">
+      <canvas id="signatureCanvas"></canvas>
+      <img class="sign-close" src="images/close.png" alt="" onclick="cancelSign()"/>
+    </div>
+    <div id="customer-tip">
+      请不要使用耳机，请正对屏幕
+    </div>
 
-<audio id="tts" width="310" autoplay controls></audio>
+<!-- 面签信息弹框 -->
+<div id="faceSignModal" style="display: none; position: fixed; bottom: 0; left: 0; width: 100%; background: white; padding: 20px; box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1); z-index: 1000;">
+  <h3>面签信息</h3>
+  <div style="margin-bottom: 0px;">
+    <!-- 订单编号 -->
+    <div style="display: flex; justify-content: space-between;border-bottom: 1px solid gray;margin-bottom: 10px;">
+      <p><strong>订单编号：</strong></p>
+      <p>23565476822</p>
+    </div>
+    <div style="display: flex; justify-content: space-between;">
+      <p><strong>客户身份信息</strong></p>
+      <p></p>
+    </div>
+    <!-- 主借人姓名 -->
+    <div style="display: flex; justify-content: space-between;">
+      <p><strong>姓名：</strong></p>
+      <p>张三</p>
+    </div>
+    <!-- 身份证号码 -->
+    <div style="display: flex; justify-content: space-between;border-bottom: 1px solid gray;margin-bottom: 10px;">
+      <p><strong>身份证号码：</strong></p>
+      <p>2306223948557838</p>
+    </div>
+    <!-- 客户意向信息 -->
+    <div style="display: flex; justify-content: space-between">
+      <p><strong>客户意向信息</strong></p>
+      <p></p>
+    </div>
+    <!-- 意向车型 -->
+    <div style="display: flex; justify-content: space-between;">
+      <p><strong>意向车型：</strong></p>
+      <p>宝马 X5</p>
+    </div>
+    <div style="display: flex; justify-content: space-between;">
+      <p><strong>申请分期额度：</strong></p>
+      <p> 100,000 元</p>
+    </div>
+    <div style="display: flex; justify-content: space-between;">
+      <p><strong>申请分期期数：</strong></p>
+      <p>12期</p>
+    </div>
+  </div>
+  <div style="border-top: 1px solid gray;">
+    <h4>影像资料</h4>
+    <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+      <!-- 身份证正面 -->
+      <div class="image-container">
+        <img src="images/guaduan.png" alt="" class="zoomable-image" />
+        <p>身份证正面</p>
+      </div>
+      <!-- 身份证反面 -->
+      <div class="image-container" style="margin-left: 10px;">
+        <img src="images/guaduan.png" alt="" class="zoomable-image" />
+        <p>身份证反面</p>
+      </div>
+    </div>
+  </div>
+  <div>
+    <h4>截图图片</h4>
+    <div id="screenshotList" style="display: flex; flex-wrap: wrap; gap: 10px;">
+      <!-- 截图图片动态插入 -->
+    </div>
+  </div>
+  <div style="width: 100%;display: flex;justify-content: center;">
+    <button onclick="closeFaceSignModal()" style="margin-top: 20px;">关闭</button>
+  </div>
+</div>
+
+<!-- 图片放大弹框 -->
+<div id="imageZoomModal" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.5); z-index: 1001;">
+  <img id="zoomedImage" src="" alt="放大图片" style="max-width: 90vw; max-height: 90vh;" />
+  <button onclick="closeImageZoomModal()" style="margin-top: 10px;">关闭</button>
+</div>
+
+<!-- 删除确认弹框 -->
+<div id="deleteConfirmModal" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.5); z-index: 1002;">
+  <p>确定要删除该截图吗？</p>
+  <button onclick="confirmDelete()">确定</button>
+  <button onclick="cancelDelete()">取消</button>
+</div>
+
+<!-- 问题回顾弹框 -->
+<div class="questionsModal">
+  <div class="modal-content">
+    <!-- 操作区 -->
+    <div class="action-bar">
+      <h3>问题回顾</h3>
+      <div class="switch-btns">
+        <button id="prevBtn" onclick="prevQ()">←</button>
+        <button id="nextBtn" onclick="nextQ()">→</button>
+      </div>
+    </div>
+    <!-- 问题列表 -->
+    <div class="question-list">
+      <div class="question-item">
+        <div class="status-icon"></div>
+        <div class="question-text" id="questionText"></div>
+        <div class="progress" id="progress"></div>
+        <button class="play-btn" onclick="speakQ()">▶</button>
+      </div>
+      <div class="answer-section">
+        <p>参考答案：<span>"是的"</span></p>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- 问题回顾：纯文字 -->
+<div class="question-text-other" id="questionTextOther"></div>
+  </div>
+</div>
 
 <script type="text/javascript">
-  const host = 'dahuaboke.com:11443'
-  $('#tts').prop('srcObject', null)
-  ttsPlayUrl = 'webrtc://' + host + '/cdl001/abc01'
-  console.log('ttsPlayUrl', ttsPlayUrl);
-  let playertts = new SrsRtcPlayerAsync()
-  $('#tts').prop('srcObject', playertts.stream)
-  playertts.play(ttsPlayUrl).then(function (session) {
-    $('#tts').prop('muted', false)
-    console.log("aaaaaaaaaaaaaaa")
-  }).catch(function (reason) {
-    console.log("bbbbbbbbbbbbb")
-    playertts.close()
-    console.error(reason)
-  })
-</script>
+  // const host = '1panel.haixinyan.xyz:11443'
+  const host = `${window.location.hostname}:${window.location.port}`
+  const adminList = ['zy', 'bjx'];
+  const isAdmin = !!adminList.find(o => window.location.href.includes(o));  //客户经理
+  const userId = generateUUID()
+  const webSocketUrl = 'wss://' + host + '/websocket'
+  const ws = new WebSocket(webSocketUrl)
+  const players = new Map()
+  let open = false
+  let publisher
+  let player
+  let video
+  let ttsPlayUrl
+  let streamId
+  let facingMode = 'user'
+  let rtc_media_publisher = document.getElementById('rtc_media_publisher');
+  let rtc_media_player = document.getElementById('rtc_media_player');
+  let tts = document.getElementById('tts');
+  let localStream = null;
+  let microphoneStatus = true;
+  const canvas = document.getElementById('signatureCanvas');
+  const ctx = canvas.getContext('2d');
+  let isDrawing = false;
+  let lastX = 0;
+  let lastY = 0;
+  
+  document.getElementById('video-room').style.display = 'none';
+  document.getElementById('sign-box').style.display = 'none';
+  console.log('isAdmin', isAdmin)
+  if (!isAdmin) {
+    // 客户端
+    document.getElementById('right-nav').style.display = 'none';
+    document.getElementById('customer-tip').style.display = 'block';
+  }
 
+  let screenshots = []; // 用于保存截图的数组
+  let screenshotDataUrl = null;// 用于保存截图的变量
+  let selectedScreenshotIndex = null;// 当前选中的截图索引（用于删除）
+
+  const questions = [
+  "请问您的名字是张三吗？",
+  "请问您要办理的业务是车辆的贷款业务吗？"
+  // "请问您在吗？"
+];
+
+let currentQuestion = 0;
+let speech = null;
+let isShowQModal = false
+const questionStates = Array(questions.length).fill(null); // null: 未开始, true: 完成, false: 失败
+  
+  ws.onopen = function () {
+    open = true
+  }
+  
+  ws.onmessage = function (event) {
+    const r = JSON.parse(event.data)
+    console.log(r)
+    if (r.type && r.type == 'createOrEnterRoom' && r.code == '00') {
+      $('#rtc_media_publisher').show()
+      $('#publisher').show()
+      publisher = new SrsRtcPublisherAsync()
+      $('#rtc_media_publisher').prop('srcObject', publisher.stream)
+      localStream = publisher.stream
+      const rtcUrl = 'webrtc://' + host + '/' + $('#txt_room').val() + "/" + userId
+      publisher.publish(rtcUrl).then(function (session) {
+        // $('#self').text('Self: ' + rtcUrl)
+      }).catch(function (reason) {
+        publisher.close()
+        alert("publish连接失败")
+        console.error(reason)
+      })
+      
+      // getCameraStream();
+      // 播放音乐
+      const message = JSON.parse(r.message)
+      console.log('message', message);
+      // $('#tts').show()
+      $('#tts').prop('srcObject', null)
+      ttsPlayUrl = 'webrtc://' + host + '/' + $('#txt_room').val() + "/" + message.ruuid
+      streamId = '/' + $('#txt_room').val() + "/" + message.ruuid
+      console.log('ttsPlayUrl', ttsPlayUrl);
+      let playertts = new SrsRtcPlayerAsync()
+      $('#tts').prop('srcObject', playertts.stream)
+      playertts.play(ttsPlayUrl).then(function (session) {
+        $('#tts').prop('muted', false)
+      }).catch(function (reason) {
+        playertts.close()
+        console.error(reason)
+      })
+      
+    } else if (r.type && r.type == 'roomMessage' && r.code == '00') {
+      const message = JSON.parse(r.message)
+      const roomId = message.roomId
+      const personSet = message.personSet
+      for (let i = 0; i < personSet.length; i++) {
+        const otherUserId = personSet[i].userId
+        if (otherUserId != userId) {
+          $('#player-' + otherUserId).remove()
+          player = new SrsRtcPlayerAsync()
+          $('#player').show();
+          video = $('#rtc_media_player')
+          video.show()
+          video.prop('srcObject', player.stream)
+          const playUrl = 'webrtc://' + host + '/' + $('#txt_room').val() + "/" + otherUserId
+          player.play(playUrl).then(function (session) {
+            video.prop('muted', false)
+            players.set(otherUserId, {
+              player: player
+            })
+          }).catch(function (reason) {
+            alert("play连接失败")
+            player.close()
+            video.hide()
+            console.error(reason)
+          })
+        }
+      }
+    } else if (r.type == 'leaveRoom' && r.code == '00') {
+      const userId = JSON.parse(r.message).userId
+      const p = players.get(userId)
+      p.player.close()
+      $('#player').hide();
+    } else if (r.type == 'tts' && r.code == '00') {
+      console.log("播放成功：" + ttsPlayUrl)
+      // $('#tts').show()
+      // $('#tts').prop('srcObject', null)
+      // const playUrl = 'webrtc://' + host + '/p001/p222'
+      // let player = new SrsRtcPlayerAsync()
+      // $('#tts').prop('srcObject', player.stream)
+      // player.play(playUrl).then(function (session) {
+      //   $('#tts').prop('muted', false)
+      //   console.log("播放成功：" + playUrl)
+      // }).catch(function (reason) {
+      //   player.close()
+      //   console.error(reason)
+      // })
+    } else if (r.type == "transmit"){
+      console.log(r.message)
+      if(r.childType == "draw"){
+        const fx1 = Math.floor(r.message.x1);
+        const fy1 = Math.floor(r.message.y1);
+        const fx2 = Math.floor(r.message.x2);
+        const fy2 = Math.floor(r.message.y2);
+        console.log(fx1 + "," + fy1 + "," + fx2  + "," + fy2)
+        ctx.beginPath();
+        ctx.moveTo(fx1, fy1);
+        ctx.lineTo(fx2, fy2);
+        ctx.stroke();
+      }
+    }
+  }
+  
+  ws.onclose = function(event) {
+    console.log(`Connection closed with code ${event.code} and reason ${event.reason}`);
+  };
+  function send(message) {
+    if (open) {
+      ws.send(JSON.stringify(message))
+      document.getElementById('video-room').style.display = 'block';
+      document.getElementById('join-room').style.display = 'none';
+    } else {
+      alert("webSocket连接失败")
+    }
+  }
+  
+  function close() {
+    ws.close()
+  }
+  
+  function createRoom() {
+    send({
+      "type": "createOrEnterRoom",
+      "roomId": $('#txt_room').val(),
+      "userId": userId
+    })
+  }
+  
+  function playMusic() {
+    send({
+      "type": "tts",
+      "roomId": $('#txt_room').val(),
+      "userId": userId,
+      // "streamId": streamId
+    })
+    const tts = document.getElementById('tts');
+    tts.muted = false;
+    tts.play().catch(error => {
+      console.error('播放失败:', error);
+      if (/Android/.test(navigator.userAgent)) {
+        // 安卓可能需要强制恢复静音状态
+        tts.muted = false;
+        tts.play();
+      }
+    });
+    console.log('streamId', streamId)
+  }
+  // ios不能自动播放，需手动触发
+  document.getElementById('playButton').addEventListener('click', playMusic);
+
+  function generateUUID() {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+      const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+      return v.toString(16)
+    })
+  }
+  
+  
+  // 开始绘制
+  canvas.addEventListener('touchstart', (e) => {
+    e.preventDefault(); // 防止默认的触摸行为
+    isDrawing = true;
+    const touch = e.touches[0];
+    [lastX, lastY] = [touch.pageX - canvas.offsetLeft, touch.pageY - canvas.offsetTop];
+  });
+  
+  canvas.addEventListener('touchmove', (e) => {
+    e.preventDefault(); // 防止默认的触摸行为
+    if (isDrawing) {
+      const touch = e.touches[0];
+      const currentX = touch.pageX - canvas.offsetLeft;
+      const currentY = touch.pageY - canvas.offsetTop;
+      
+      ctx.beginPath();
+      ctx.moveTo(lastX, lastY);
+      ctx.lineTo(currentX, currentY);
+      ctx.stroke();
+      
+      
+      
+      send({
+        "type": "transmit",
+        "childType":"draw",
+        "roomId": $('#txt_room').val(),
+        "userId": userId,
+        "message" : {
+          "x1": lastX,
+          "y1": lastY,
+          "x2": currentX,
+          "y2": currentY
+        }
+      });
+      lastX = currentX;
+      lastY = currentY;
+    }
+  });
+  
+  
+  
+  // 结束绘制
+  canvas.addEventListener('touchend', () => {
+    isDrawing = false;
+  });
+  
+  // 开始绘制
+  canvas.addEventListener('mousedown', (e) => {
+    isDrawing = true;
+    [lastX, lastY] = [e.offsetX, e.offsetY];
+  });
+  
+  // 绘制过程
+  canvas.addEventListener('mousemove', (e) => {
+    if (isDrawing) {
+      ctx.beginPath();
+      ctx.moveTo(lastX, lastY);
+      ctx.lineTo(e.offsetX, e.offsetY);
+      ctx.stroke();
+      
+      send({
+        "type": "transmit",
+        "childType":"draw",
+        "roomId": $('#txt_room').val(),
+        "userId": userId,
+        "message" : {
+          "x1": lastX,
+          "y1": lastY,
+          "x2": e.offsetX,
+          "y2": e.offsetY
+        }
+      });
+      [lastX, lastY] = [e.offsetX, e.offsetY];
+    }
+  });
+  
+  // 结束绘制
+  canvas.addEventListener('mouseup', () => {
+    isDrawing = false;
+  });
+  
+  // 挂断
+  function handleCancel() {
+    //判断问题回顾是否执行完毕
+    if (questionStates.every(state => state === true)) {
+      // publisher.close()
+      // if(player) {
+      //   player.close();
+      // }
+      document.getElementById('video-room').style.display = 'none';
+      document.getElementById('join-room').style.display = 'block';
+      console.log('rtc_media_publisher',rtc_media_publisher.srcObject)
+      console.log('rtc_media_player',rtc_media_player.srcObject)
+      console.log('tts',tts.srcObject)
+      console.log('rtc_media_player', rtc_media_player, player)
+      
+      publisher.close()
+      localStream.getTracks().forEach(track => track.stop());
+      // rtc_media_publisher.srcObject?.getTracks().forEach(track => track.stop());
+      // rtc_media_publisher.srcObject = null;
+      tts.srcObject?.getTracks().forEach(track => track.stop());
+      tts.srcObject = null;
+      
+      if(player) {
+        player.close();
+        rtc_media_player.srcObject?.getTracks().forEach(track => track.stop());
+        rtc_media_player.srcObject = null;
+      }
+      cancelSign()
+      //关闭面签信息弹框
+      closeFaceSignModal()
+      //关闭问题回顾弹框
+      closeQuestionsModal()
+      closeQuestionTextOther()
+    } else {
+      alert('存在未播报完成的节点话术，建议重新播报');
+      return
+    }
+  }
+  
+  // 签名
+  function showSign() {
+    console.log('签名')
+    document.getElementById('sign-box').style.display = 'block';
+  }
+  
+  // 关闭签名
+  function cancelSign () {
+    document.getElementById('sign-box').style.display = 'none';
+  }
+  
+  // 切换摄像头
+  function switchCamera() {
+    if (!isMobile()) return;
+    // 切换facingMode值，前置变后置，后置变前置
+    facingMode = facingMode === 'user' ? 'environment' : 'user';
+    if (facingMode === 'user') {
+      // 前置摄像头镜像
+      rtc_media_publisher.style.transform = 'rotateY(180deg)'
+    } else if (facingMode === 'environment') {
+      rtc_media_publisher.style.transform = 'rotateY(0)'
+    }
+    // 停止当前流并重新获取流
+    const tracks = rtc_media_publisher.srcObject.getTracks();
+    tracks.forEach(track => track.stop());
+    // 重新获取流并设置新的facingMode
+    getCameraStream();
+  }
+  
+  function getCameraStream() {
+    const constraints = {
+      video: {
+        width: { ideal: 1280 },
+        height: { ideal: 720 },
+        frameRate: { ideal: 30 }, // 视频流的帧率
+        // facingMode: facingMode, // 前置/后置摄像头
+        facingMode: 'user', // 前置/后置摄像头
+      },
+      audio: false
+    };
+    navigator.mediaDevices.getUserMedia(constraints).then(stream => {
+      rtc_media_publisher.srcObject = stream;
+    }).catch(error => {
+      console.error("获取媒体设备失败:", error);
+    });
+  }
+  
+  // 判断是否为移动设备
+  function isMobile() {
+    return (
+      typeof window.orientation !== "undefined" || // 判断是否存在window.orientation属性，此属性在移动设备上一般存在
+      navigator.userAgent.indexOf('IEMobile') !== -1 ||
+      navigator.userAgent.indexOf('iPhone') !== -1 ||
+      navigator.userAgent.indexOf('Android') !== -1 && navigator.userAgent.indexOf('Mobile') !== -1 ||
+      navigator.userAgent.indexOf('BlackBerry') !== -1 ||
+      navigator.userAgent.indexOf('Iqoo') !== -1 ||
+      navigator.userAgent.indexOf('Opera Mini') !== -1
+    );
+  }
+  
+  // 全屏
+  function fullScreen(id) {
+    console.log('id',id,document.getElementById('rtc_media_player').style)
+    if (id === 'publisher') {
+      document.getElementById('publisher').style.width = '100%';
+      document.getElementById('publisher').style.height = '100vh';
+      document.getElementById('publisher').style.position = 'relative';
+      document.getElementById('publisher').style.zIndex = '1';
+      document.getElementById('player').style.width = '300px';
+      document.getElementById('player').style.height = '200px';
+      document.getElementById('player').style.position = 'absolute';
+      document.getElementById('player').style.top = '0';
+      document.getElementById('player').style.zIndex = '999';
+    } else if (id === 'player') {
+      document.getElementById('player').style.width = '100%';
+      document.getElementById('player').style.height = '100vh';
+      document.getElementById('player').style.position = 'relative';
+      document.getElementById('player').style.zIndex = '1';
+      document.getElementById('publisher').style.width = '310px';
+      document.getElementById('publisher').style.height = '200px';
+      document.getElementById('publisher').style.position = 'absolute';
+      document.getElementById('publisher').style.top = '0';
+      document.getElementById('publisher').style.zIndex = '999';
+    }
+  }
+  function handleMicrophone () {
+    microphoneStatus = !microphoneStatus
+    document.getElementById('microphone-img').src =  microphoneStatus ? 'images/act_microphone.png' : 'images/microphone.png';
+    if(microphoneStatus) {
+      // 打开麦克风
+      unmuted();
+    } else {
+      // 关闭麦克风
+      muted();
+    }
+  }
+  // 关闭麦克风
+  function muted() {
+    if(localStream == null){
+      alert('请打开音视频');
+      return false;
+    }
+    const tracks = localStream.getTracks();
+    tracks.forEach(track => {
+      if(track.kind === 'audio'){
+        track.enabled = false;
+      }
+    });
+    console.log('关闭麦克风')
+  }
+  // 打开麦克风
+  function unmuted() {
+    if(localStream == null){
+      alert('请打开音视频');
+      return false;
+    }
+    const tracks = localStream.getTracks();
+    tracks.forEach(track => {
+      if(track.kind === 'audio'){
+        track.enabled = true;
+      }
+    });
+    console.log('打开麦克风')
+  }
+
+// 打开面签信息弹框
+function showFaceSignModal() {
+  bindImageZoomEvents();
+  // 显示弹框
+  document.getElementById('faceSignModal').style.display = 'block';
+  //关闭问题回顾弹框
+  closeQuestionsModal()
+}
+// 关闭面签信息弹框
+function closeFaceSignModal() {
+  document.getElementById('faceSignModal').style.display = 'none';
+}
+
+// 截图功能
+function captureScreenshot() {
+  if (screenshots.length > 20) {
+    alert('已达截图图片保存上限（20），无法进行截图！');
+    return;
+  }
+
+  // 获取视频元素（截取本地视频）
+  const video = document.getElementById('rtc_media_publisher');
+
+  // 创建canvas画布
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+
+  // 设置canvas尺寸与视频一致
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+
+  try {
+    // 将视频画面绘制到canvas
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+    // 将canvas转换为图片并保存
+    const screenshotDataUrl = canvas.toDataURL('image/png');
+    screenshots.push(screenshotDataUrl); // 保存截图
+    updateScreenshotList(); // 更新截图列表
+    alert('截图成功！');
+  } catch (error) {
+    console.error('截图失败:', error);
+    alert('截图失败，请确保视频已播放！');
+  }
+}
+
+// 更新截图列表
+function updateScreenshotList() {
+  const screenshotList = document.getElementById('screenshotList');
+  screenshotList.innerHTML = ''; // 清空列表
+
+  screenshots.forEach((screenshot, index) => {
+    const screenshotItem = document.createElement('div');
+    screenshotItem.className = 'image-container';
+    screenshotItem.innerHTML = `
+      <img src="${screenshot}" alt="截图" class="zoomable-image" />
+      <span class="delete-icon" onclick="openDeleteConfirmModal(${index})">×</span>
+    `;
+    screenshotList.appendChild(screenshotItem);
+  });
+}
+
+// 打开删除确认弹框
+function openDeleteConfirmModal(index) {
+  selectedScreenshotIndex = index;
+  document.getElementById('deleteConfirmModal').style.display = 'block';
+}
+
+// 确认删除
+function confirmDelete() {
+  if (selectedScreenshotIndex !== null) {
+    screenshots.splice(selectedScreenshotIndex, 1); // 删除截图
+    updateScreenshotList(); // 更新截图列表
+    selectedScreenshotIndex = null;
+  }
+  closeDeleteConfirmModal();
+}
+
+// 取消删除
+function cancelDelete() {
+  selectedScreenshotIndex = null;
+  closeDeleteConfirmModal();
+}
+
+// 关闭删除确认弹框
+function closeDeleteConfirmModal() {
+  document.getElementById('deleteConfirmModal').style.display = 'none';
+}
+
+// 打开图片放大弹框
+function openImageZoomModal(src) {
+  const zoomedImage = document.getElementById('zoomedImage');
+  zoomedImage.src = src;
+  document.getElementById('imageZoomModal').style.display = 'block';
+}
+
+// 关闭图片放大弹框
+function closeImageZoomModal() {
+  document.getElementById('imageZoomModal').style.display = 'none';
+}
+
+// 绑定图片点击事件（放大功能）
+function bindImageZoomEvents() {
+  const images = document.querySelectorAll('.zoomable-image');
+  images.forEach(image => {
+    image.addEventListener('click', () => {
+      openImageZoomModal(image.src);
+    });
+  });
+}
+// 初始化绑定事件
+document.addEventListener('DOMContentLoaded', () => {
+  bindImageZoomEvents(); // 页面加载完成后绑定事件
+});
+
+//打开问题回顾弹框
+function showQuestionsModal(){
+  isShowQModal = !isShowQModal
+  if(isShowQModal){
+    document.querySelector('.questionsModal').style.display = 'block';
+    //展示问题列表
+    updateQuestion();
+    //关闭面签信息弹框
+    closeFaceSignModal()
+  }else{
+    closeQuestionsModal()
+  }
+}
+
+//关闭问题回顾弹框
+function closeQuestionsModal(){
+  document.querySelector('.questionsModal').style.display = 'none';
+  showQuestionTextOther()
+  isShowQModal =false
+}
+//问题回顾客户端展示
+function showQuestionTextOther(){
+  document.getElementById('questionTextOther').style.display = 'block';
+}
+//问题回顾客户端关闭
+function closeQuestionTextOther(){
+  document.getElementById('questionTextOther').style.display = 'none';
+}
+
+//问题列表
+function updateQuestion() {
+  document.getElementById('questionText').textContent = questions[currentQuestion];
+  document.getElementById('questionTextOther').textContent = questions[currentQuestion];
+  document.getElementById('progress').textContent = `${currentQuestion + 1}/${questions.length}`;
+  updateStatusIcon();
+}
+//更新节点状态
+function updateStatusIcon() {
+  const icon = document.querySelector('.status-icon');
+  icon.className = 'status-icon';
+  if (questionStates[currentQuestion] === true) {
+    icon.classList.add('completed');
+  } else if (questionStates[currentQuestion] === false) {
+    icon.classList.add('failed');
+  }
+}
+//语音播报
+function speakQ(){
+  document.querySelectorAll('.play-btn').forEach(btn => {
+    if (speech) speech.cancel();
+    
+    // 语音播报逻辑
+    const utterance = new SpeechSynthesisUtterance(questions[currentQuestion]);
+    speech = window.speechSynthesis.speak(utterance);
+    
+    // 更新状态为正在播放
+    questionStates[currentQuestion] = null;
+    document.querySelector('.status-icon').classList.add('playing');
+    
+    utterance.onend = () => {
+      questionStates[currentQuestion] = true;
+      updateStatusIcon();
+    };
+    
+    utterance.onerror = () => {
+      questionStates[currentQuestion] = false;
+      updateStatusIcon();
+    };
+  });
+
+}
+
+// 切换问题
+function prevQ(){
+  if (currentQuestion > 0) {
+    if (speech) {
+      speech.cancel();
+      questionStates[currentQuestion] = false;
+    }
+    currentQuestion--;
+    updateQuestion();
+  }
+}
+function nextQ(){
+  if (currentQuestion < questions.length - 1) {
+    if (speech) {
+      speech.cancel();
+      questionStates[currentQuestion] = false;
+    }
+    currentQuestion++;
+    updateQuestion();
+  }
+}
+</script>
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  .container {
+    margin: 0;
+    width: 100%;
+  }
+  .video-room {
+    width: 100vw;
+    position: relative;
+  }
+  video {
+    object-fit: cover;
+    transform: rotateY(180deg);
+  }
+  .right-nav {
+    background: rgba(0, 0, 0, 0.3);
+    position: absolute;
+    right: 0;
+    top: 35%;
+    transform: translateY(-50%);
+    color: #ffffff;
+    font-size: 18px;
+    text-align: center;
+    padding: 10px 5px;
+    display: grid;
+    /*垂直三等份*/
+    grid-template-rows: repeat(3, 1fr);
+    /*垂直居中*/
+    place-items: center;
+    grid-gap: 20px;
+    z-index: 9999;
+  }
+  .right-nav-img {
+    width: 20px;
+    margin-bottom: 8px;
+  }
+  #join-room {
+    margin: 30px;
+  }
+  .srs_players {
+    position: relative;
+  }
+  #rtc_media_publisher {
+    width: 100%;
+    height: 100%;
+  }
+  #rtc_media_player {
+    width: 100%;
+    height: 100%;
+  }
+  .publisher {
+    width: 100%;
+    height: 100vh;
+  }
+  .player {
+    width: 300px;
+    height: 200px;
+    position: absolute;
+    top: 0;
+    left: 0;
+  }
+  #signatureCanvas {
+    width: 350px;
+    height: 200px;
+    background: #ffffff;
+    border-radius: 16px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 9999;
+  }
+  #sign-box {
+  }
+  .sign-close {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(150px, -95px);
+    width: 20px;
+    height: 20px;
+    z-index: 9999;
+  }
+  #customer-tip {
+    display: none;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: 20px;
+    border-radius: 35px;
+    background-color: rgba(228, 57, 60, 0.7);
+    color: #ffffff;
+    font-size: 18px;
+    padding: 15px;
+    width: 300px;
+    text-align: center;
+    z-index: 9999;
+  }
+  /* 面签信息弹框样式 */
+#faceSignModal {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height:65%;
+  overflow: auto;
+  border-radius: 15px;
+  background: white;
+  padding: 20px;
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+  z-index: 10000;
+}
+
+/* 图片容器样式 */
+.image-container {
+  position: relative;
+  text-align: center;
+}
+
+.image-container img {
+  max-width: 100px;
+  max-height: 100px;
+  cursor: pointer;
+}
+
+/* 删除图标样式 */
+.delete-icon {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background: red;
+  color: white;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  line-height: 20px;
+  text-align: center;
+  cursor: pointer;
+}
+
+/* 弹框按钮样式 */
+button {
+  padding: 10px 20px;
+  background: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #0056b3;
+}
+
+.questionsModal {
+  display: none;
+  position: fixed;
+  bottom: 0px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  background: white;
+  border-radius: 15px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.3);
+  z-index: 1000;
+}
+
+.action-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px;
+  border-bottom: 1px solid #ddd;
+}
+
+.switch-btns button {
+  margin-left: 10px;
+  padding: 5px 10px;
+}
+
+.question-list {
+  background: #f5f5f5;
+  padding: 15px;
+}
+
+.question-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
+.question-text{
+  flex: 0.99;
+}
+.question-text-other{
+  display: none;
+  position: fixed;
+  bottom: 0px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  background: white;
+  border-radius: 15px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.3);
+  z-index: 1000;
+  background-color: rgba(255, 255, 255, 0.5); /* 白色背景，50% 透明度 */
+  padding: 20px; /* 内边距 */
+  color: #fff; /* 文字颜色 */
+  font-size: 16px; /* 文字大小 */
+  text-align: center; /* 文字居中 */
+  border-radius: 8px; /* 圆角 */
+  z-index: 99;
+}
+.play-btn{
+  margin-left:5px;
+}
+.progress{
+  margin-bottom:0px;
+}
+.status-icon {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  margin-right: 10px;
+}
+
+.status-icon.completed {
+  background: #4CAF50;
+  position: relative;
+}
+.status-icon.completed::after {
+  content: '✓';
+  color: white;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.status-icon.failed {
+  background: #f44336;
+}
+.status-icon.failed::after {
+  content: '•';
+  color: white;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.status-icon.playing {
+  background: #2196F3;
+}
+</style>
+</body>
 </body>
 </html>
