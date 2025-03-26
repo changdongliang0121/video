@@ -701,20 +701,24 @@ function captureScreenshot() {
 
   // 获取视频元素（截取本地视频）
   const video = document.getElementById('rtc_media_publisher');
+  // 获取视频元素（截取远程视频）
+  const playerVideo = document.getElementById('rtc_media_player');
   const wasPlaying = !video.paused;
   
   if (wasPlaying) {
+    //解决iOS截屏卡顿问题，避免线程冲突，先暂停
     video.pause();
+    playerVideo.pause();
     // iOS需要等待一小段时间
     setTimeout(() => {
-      takeScreenshot(video, wasPlaying);
+      takeScreenshot(video, wasPlaying, playerVideo);
     }, 200);
   } else {
-    takeScreenshot(video, wasPlaying);
+    takeScreenshot(video, wasPlaying, playerVideo);
   }
 }
 
-function takeScreenshot(video, wasPlaying) {
+function takeScreenshot(video, wasPlaying, playerVideo) {
   try {
     const canvas = document.createElement('canvas');
     canvas.width = video.videoWidth;
@@ -734,6 +738,7 @@ function takeScreenshot(video, wasPlaying) {
       // iOS可能需要延迟恢复播放
       setTimeout(() => {
         video.play().catch(e => console.error('恢复播放失败:', e));
+        playerVideo.play().catch(e => console.error('恢复播放失败:', e));
       }, 200);
     }
   }
