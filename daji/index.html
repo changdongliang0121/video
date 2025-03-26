@@ -311,6 +311,7 @@ const questionStates = Array(questions.length).fill(null); // null: 未开始, t
           const playUrl = 'webrtc://' + host + '/' + $('#txt_room').val() + "/" + otherUserId
           player.play(playUrl).then(function (session) {
             video.prop('muted', false)
+            rtc_media_player.play()
             players.set(otherUserId, {
               player: player
             })
