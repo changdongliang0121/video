@@ -215,6 +215,7 @@
   let player
   let video
   let ttsPlayUrl
+  let playertts
   let streamId
   let facingMode = 'user'
   let rtc_media_publisher = document.getElementById('rtc_media_publisher');
@@ -286,7 +287,7 @@ const questionStates = Array(questions.length).fill(null); // null: 未开始, t
       ttsPlayUrl = 'webrtc://' + host + '/' + $('#txt_room').val() + "/" + message.ruuid
       streamId = '/' + $('#txt_room').val() + "/" + message.ruuid
       console.log('ttsPlayUrl', ttsPlayUrl);
-      let playertts = new SrsRtcPlayerAsync()
+      playertts = new SrsRtcPlayerAsync()
       $('#tts').prop('srcObject', playertts.stream)
       playertts.play(ttsPlayUrl).then(function (session) {
         $('#tts').prop('muted', false)
@@ -324,13 +325,14 @@ const questionStates = Array(questions.length).fill(null); // null: 未开始, t
         }
       }
     } else if (r.type == 'leaveRoom' && r.code == '00') {
-      const userId = JSON.parse(r.message).userId
-      const p = players.get(userId)
-      p.player.close()
+      // const userId = JSON.parse(r.message).userId
+      // const p = players.get(userId)
+      // p.player.close()
+      player.close()
+      playertts.close()
       $('#player').hide();
     } else if (r.type == 'tts' && r.code == '00') {
       console.log("播放成功：" + ttsPlayUrl)
-      playertts.pc.ontrack()
       // $('#tts').show()
       // $('#tts').prop('srcObject', null)
       // const playUrl = 'webrtc://' + host + '/p001/p222'
@@ -522,10 +524,11 @@ const questionStates = Array(questions.length).fill(null); // null: 未开始, t
 
   // 挂断
   function leaveRoom() {
-    // publisher.close()
-    // if(player) {
-    //   player.close();
-    // }
+    send({
+      "type": "leaveRoom",
+      "roomId": $('#txt_room').val(),
+      "userId": userId,
+    })
     document.getElementById('video-room').style.display = 'none';
     document.getElementById('join-room').style.display = 'block';
     console.log('rtc_media_publisher',rtc_media_publisher.srcObject)
