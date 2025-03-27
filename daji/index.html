@@ -232,7 +232,6 @@
   document.getElementById('video-room').style.display = 'none';
   document.getElementById('sign-box').style.display = 'none';
   document.getElementById('hang-up-dialog').style.display = 'none';
-  console.log('isAdmin', isAdmin)
   if (!isAdmin) {
     // 客户端
     document.getElementById('right-nav').style.display = 'none';
@@ -271,14 +270,12 @@ const questionStates = Array(questions.length).fill(null); // null: 未开始, t
       localStream = publisher.stream
       const rtcUrl = 'webrtc://' + host + '/' + $('#txt_room').val() + "/" + userId
       publisher.publish(rtcUrl).then(function (session) {
-        // $('#self').text('Self: ' + rtcUrl)
       }).catch(function (reason) {
         publisher.close()
         alert("publish连接失败")
         console.error(reason)
       })
 
-      // getCameraStream();
       // 播放音乐
       const message = JSON.parse(r.message)
       console.log('message', message);
@@ -286,7 +283,6 @@ const questionStates = Array(questions.length).fill(null); // null: 未开始, t
       $('#tts').prop('srcObject', null)
       ttsPlayUrl = 'webrtc://' + host + '/' + $('#txt_room').val() + "/" + message.ruuid
       streamId = '/' + $('#txt_room').val() + "/" + message.ruuid
-      console.log('ttsPlayUrl', ttsPlayUrl);
       playertts = new SrsRtcPlayerAsync()
       $('#tts').prop('srcObject', playertts.stream)
       playertts.play(ttsPlayUrl).then(function (session) {
@@ -403,7 +399,6 @@ const questionStates = Array(questions.length).fill(null); // null: 未开始, t
         tts.play();
       }
     });
-    console.log('streamId', streamId)
   }
   // ios不能自动播放，需手动触发
   document.getElementById('playButton').addEventListener('click', playMusic);
@@ -512,7 +507,6 @@ const questionStates = Array(questions.length).fill(null); // null: 未开始, t
   // 挂断-btn
   function handleHangUp() {
     //判断问题回顾是否执行完毕
-    console.log('questionStates', questionStates)
     document.getElementById('hang-up-dialog-text').innerHTML = '';
     document.getElementById('hang-up-dialog-text').innerHTML = '存在未播报完成的节点话术，是否挂断?' ;
     if (questionStates.some(state => !state)) {
@@ -531,10 +525,6 @@ const questionStates = Array(questions.length).fill(null); // null: 未开始, t
     })
     document.getElementById('video-room').style.display = 'none';
     document.getElementById('join-room').style.display = 'block';
-    console.log('rtc_media_publisher',rtc_media_publisher.srcObject)
-    console.log('rtc_media_player',rtc_media_player.srcObject)
-    console.log('tts',tts.srcObject)
-    console.log('rtc_media_player', rtc_media_player, player)
 
     publisher.close()
     localStream.getTracks().forEach(track => track.stop());
@@ -620,7 +610,6 @@ const questionStates = Array(questions.length).fill(null); // null: 未开始, t
 
   // 全屏
   function fullScreen(id) {
-    console.log('id',id,document.getElementById('rtc_media_player').style)
     if (id === 'publisher') {
       document.getElementById('publisher').style.width = '100%';
       document.getElementById('publisher').style.height = '100vh';
