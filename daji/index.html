@@ -215,7 +215,7 @@
   let player
   let video
   let ttsPlayUrl
-  let playertts
+  let ttsPlayer
   let streamId
   let facingMode = 'user'
   let rtc_media_publisher = document.getElementById('rtc_media_publisher');
@@ -283,12 +283,12 @@ const questionStates = Array(questions.length).fill(null); // null: 未开始, t
       $('#tts').prop('srcObject', null)
       ttsPlayUrl = 'webrtc://' + host + '/' + $('#txt_room').val() + "/" + message.ruuid
       streamId = '/' + $('#txt_room').val() + "/" + message.ruuid
-      playertts = new SrsRtcPlayerAsync()
-      $('#tts').prop('srcObject', playertts.stream)
-      playertts.play(ttsPlayUrl).then(function (session) {
+      ttsPlayer = new SrsRtcPlayerAsync()
+      $('#tts').prop('srcObject', ttsPlayer.stream)
+      ttsPlayer.play(ttsPlayUrl).then(function (session) {
         $('#tts').prop('muted', false)
       }).catch(function (reason) {
-        playertts.close()
+        ttsPlayer.close()
         console.error(reason)
       })
 
@@ -325,7 +325,7 @@ const questionStates = Array(questions.length).fill(null); // null: 未开始, t
       // const p = players.get(userId)
       // p.player.close()
       player.close()
-      playertts.close()
+      ttsPlayer.close()
       $('#player').hide();
     } else if (r.type == 'tts' && r.code == '00') {
       console.log("播放成功：" + ttsPlayUrl)
