@@ -12,6 +12,8 @@ public class BaseInVo {
 
     private Person person;
 
+    private String question;
+
     public String getType() {
         return type;
     }
@@ -42,5 +44,24 @@ public class BaseInVo {
 
     public void setPerson(Person person) {
         this.person = person;
+    }
+
+    public String getQuestion() {
+        return question;
+    }
+
+    public void setQuestion(String question) {
+        this.question = question;
+    }
+
+    @Override
+    public String toString() {
+        return "BaseInVo{" +
+                "type='" + type + '\'' +
+                ", userId='" + userId + '\'' +
+                ", roomId='" + roomId + '\'' +
+                ", person=" + person +
+                ", question='" + question + '\'' +
+                '}';
     }
 }

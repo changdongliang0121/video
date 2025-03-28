@@ -9,6 +9,7 @@ public class Constant {
 
     public static final String FAIL_CODE = "01";
 
+
     public static int SERVER_PORT;
 
     public static String FILE_ROOT_PATH;
@@ -30,6 +31,8 @@ public class Constant {
     public static String SRS_RTMP_HOST;
 
     public static String FFMPEG_PATH;
+
+    public static String TTS_GEN_PATH;
 
     public static String[] questionArr = new String[]{
             "请问您的姓名是张三吗?",
@@ -60,6 +63,7 @@ public class Constant {
         SRS_SERVER_PASSWORD = properties.getProperty("srsServerPassword");
         SRS_RTMP_HOST = properties.getProperty("srsRtmpHost");
         FFMPEG_PATH = properties.getProperty("ffmpegPath");
+        TTS_GEN_PATH = properties.getProperty("ttsGeneratePath");
     }
 
 

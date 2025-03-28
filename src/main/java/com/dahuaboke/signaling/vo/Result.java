@@ -10,6 +10,7 @@ public class Result {
 
     private String message;
 
+
     private Result(String type, String code, String message) {
         this.type = type;
         this.code = code;
@@ -19,6 +20,10 @@ public class Result {
     public static Result success(String type, String message) {
         return new Result(type, Constant.SUCCESS_CODE, message);
     }
+
+//    public static Result success(String type, String[] message) {
+//        return new Result(type, Constant.SUCCESS_CODE, message);
+//    }
 
     public static Result fail(String type, String message) {
         return new Result(type, Constant.FAIL_CODE, message);

@@ -25,13 +25,19 @@ public class HttpForwardHandler extends SimpleChannelInboundHandler<FullHttpRequ
 
         String result = "";
 
-        if(msg.method() != HttpMethod.POST){
+        if(msg.method() != HttpMethod.POST && !body.isEmpty()){
             result = JSONObject.toJSONString(Result.fail(msg.uri(),"必须是post请求"));
         }
 
         if (result.equals("") && msg.uri().startsWith("/room")){
             result = RoomController.forward(msg.uri(),body);
         }
+
+//        if (result.equals("") && msg.uri().startsWith("/qustionlist")){
+//            result = RoomController.forward(msg.uri(),body);
+//        }
+
+
 
         // 构建响应
         FullHttpResponse response = new DefaultFullHttpResponse(
