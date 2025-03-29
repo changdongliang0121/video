@@ -207,7 +207,7 @@
   const adminList = ['zy', 'bjx','jjp'];
   const isAdmin = !!adminList.find(o => window.location.href.includes(o));  //客户经理
   const userId = generateUUID()
-  const webSocketUrl = 'wss://' + host + '/websocket'
+  const webSocketUrl = 'wss://' + host + '/svc/websocket'
   const ws = new WebSocket(webSocketUrl)
   const players = new Map()
   let open = false
@@ -242,16 +242,18 @@
   let screenshotDataUrl = null;// 用于保存截图的变量
   let selectedScreenshotIndex = null;// 当前选中的截图索引（用于删除）
 
-  const questions = [
-  "请问您的名字是张三吗？",
-  "请问您要办理的业务是车辆的贷款业务吗？"
-  // "请问您在吗？"
+  let questions = [
+  // "请问您的名字是张三吗？",
+  // "请问您要办理的业务是车辆的贷款业务吗？"
+  // // "请问您在吗？"
 ];
 
 let currentQuestion = 0;
 let speech = null;
 let isShowQModal = false
 const questionStates = Array(questions.length).fill(null); // null: 未开始, true: 完成, false: 失败
+  // 问题回顾
+  getQuestionList();
   //初始化面签信息
   initDetail()
 
@@ -382,11 +384,13 @@ const questionStates = Array(questions.length).fill(null); // null: 未开始, t
     })
   }
 
-  function playMusic() {
+  function playTts() {
+    console.log('questions[currentQuestion]', questions[currentQuestion])
     send({
       "type": "tts",
       "roomId": $('#txt_room').val(),
       "userId": userId,
+      "question": questions[currentQuestion]
       // "streamId": streamId
     })
     const tts = document.getElementById('tts');
@@ -401,7 +405,7 @@ const questionStates = Array(questions.length).fill(null); // null: 未开始, t
     });
   }
   // ios不能自动播放，需手动触发
-  document.getElementById('playButton').addEventListener('click', playMusic);
+  document.getElementById('playButton').addEventListener('click', playTts);
 
   function generateUUID() {
     return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
@@ -805,6 +809,19 @@ document.addEventListener('DOMContentLoaded', () => {
   bindImageZoomEvents(); // 页面加载完成后绑定事件
 });
 
+// 获取问题回顾
+function getQuestionList() {
+  fetch('https://dahuaboke.com:11443' + '/svc/room/findQuestionList')
+    .then(response => response.json()) // 将响应解析为 JSON 格式
+    .then(res => {
+      questions = JSON.parse(res.message)
+      console.log('message', questions)
+    })
+    .catch(error => {
+      console.error(error);
+    });
+}
+
 //打开问题回顾弹框
 function showQuestionsModal(){
   isShowQModal = !isShowQModal
@@ -921,6 +938,8 @@ function initDetail(){
 }
 //语音播报
 function speakQ(){
+  this.playTts();
+  return
   document.querySelectorAll('.play-btn').forEach(btn => {
     if (speech) speech.cancel();
 
